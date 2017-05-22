@@ -4,13 +4,17 @@
 
 typedef uint8_t u8;
 typedef uint16_t u16;
+typedef unsigned int uint;
 
-typedef struct {
+struct b6502{
   u8 AReg, XReg, YReg, SPReg, StatusReg;
   u16 PCReg;
   u8 *memory;
-}b6502;
+  uint cycles;
+};
 
-extern void run_instruction(u8 opcode, b6502 *cpu);
+extern b6502* init_cpu();
+extern void run_cpu(b6502 *cpu);
+extern void run_opcode(u8 *opcodeAddress, b6502 *cpu);
 
 #endif
