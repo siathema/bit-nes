@@ -1,7 +1,10 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "bit_nes.h"
 #include "b_6502.h"
+#include "b_ppu.h"
 
 int main(int argc, char** argv) {
 
@@ -20,55 +23,51 @@ int main(int argc, char** argv) {
   while(fgetc(romFile) != EOF)
     count++;
 
-  u8 *rom_buffer = (u8*)malloc(sizeof(u8)*count);
+  u8 *romBuffer = (u8*)malloc(sizeof(u8)*count);
   fseek(romFile, 0, SEEK_SET);
 
   int temp = fgetc(romFile);
   int index = 0;
 
   while(temp != EOF) {
-    rom_buffer[index] = temp;
+    romBuffer[index] = temp;
     index++;
     temp = fgetc(romFile);
   }
 
+  /*
   for(int i=0; i<count; i++) {
     printf("%02X ", rom_buffer[i]&0x00ff);
   }
   printf("\n");
+  */
 
-  free(rom_buffer);
+  // emulation begins here
+
+  u8 k16Pages = romBuffer[4];
+
+  printf("%d 16k pages\n",k16Pages );
+
+  int PRGROMIndex = 16;
+
+  int mapperNum = (romBuffer[7] & 0xf0);
+  mapperNum |= (romBuffer[6] & 0xf0) >> 4;
+
+  printf("Mapper:%d\n", mapperNum);
+
+  if((romBuffer[6] & 0x04) != 0) {
+    printf("Trainer");
+    PRGROMIndex += 512;
+  }
+
+  b6502* cpu = init_cpu(romBuffer, PRGROMIndex);
+  bppu* ppu = init_ppu(cpu->memory);
+
+  run_cpu(cpu);
+
+  free(romBuffer);
   
   return 0;
   
 }
 
-b6502* init_cpu() {
-  
-}
-
-void run_cpu(b6502 *cpu) {
-  bool reset = false;
-
-  while(!reset) {
-    run_opcode(&cpu->memory[cpu->PCReg], cpu);
-  }
-}
-
-void run_opcode(u8* opcodeAddress, b6502 *cpu) {
-  u8 opcode = *opcodeAddress;
-
-  // decode opcode
-  switch(opcode){
-  case 0xa9: // LDA - Immediate mode
-    cpu->AReg = opcodeAddress[1];
-    cpu->StatusReg |= cpu->AReg == 0 ? 0x02 : 0x00; // Setting zero flag
-    cpu->StatusReg |= (cpu->AReg & 0x80) != 0 ? 0x80 : 0x00; // Setting negative flag
-    cpu->PCReg += 2;
-    cpu->cycles += 2;
-    break;
-  default:
-    printf("Undefined opcode, halting\n");
-    break;
-  }
-}
