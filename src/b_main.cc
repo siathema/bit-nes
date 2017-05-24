@@ -66,6 +66,9 @@ int main(int argc, char** argv) {
   run_cpu(cpu);
 
   free(romBuffer);
+  free(cpu->memory);
+  free(cpu);
+  free(ppu);
   
   return 0;
   

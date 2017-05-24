@@ -6,10 +6,10 @@
 #include "b_utils.h"
 
 struct b6502{
-  u8 AReg, XReg, YReg, SPReg, StatusReg;
-  u16 PCReg;
-  u8 *memory;
-  uint cycles;
+	u8 AReg, XReg, YReg, SPReg, StatusReg;
+	u16 PCReg;
+	u8 *memory;
+	uint cycles;
 };
 
 extern b6502* init_cpu(u8 *romBuffer, int romIndex);
