@@ -3,11 +3,11 @@
 
 uint translate_address(u16 address) {
 
-	u8 high = address >> 8;
-	u8 low = address & 0x00ff;
-	int addressIndex = high * 0xff;
-	addressIndex += low;
+  u8 high = address >> 8;
+  u8 low = address & 0x00ff;
+  int addressIndex = high * 0xff;
+  addressIndex += low;
 
-	return addressIndex;
+  return addressIndex;
 
 }

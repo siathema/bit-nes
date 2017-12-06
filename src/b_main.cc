@@ -36,10 +36,10 @@ int main(int argc, char** argv) {
   }
 
   /*
-  for(int i=0; i<count; i++) {
+    for(int i=0; i<count; i++) {
     printf("%02X ", rom_buffer[i]&0x00ff);
-  }
-  printf("\n");
+    }
+    printf("\n");
   */
 
   // emulation begins here
@@ -63,8 +63,8 @@ int main(int argc, char** argv) {
   b6502* cpu = init_cpu(romBuffer, PRGROMIndex);
   bppu* ppu = init_ppu(cpu->memory);
 
-  run_cpu(cpu);
-
+  run_cpu(cpu, ppu);
+  
   free(romBuffer);
   free(cpu->memory);
   free(cpu);
