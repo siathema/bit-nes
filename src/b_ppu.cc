@@ -4,6 +4,9 @@
 #include "b_ppu.h"
 #include "b_utils.h"
 
+namespace BITNES
+{
+
 bppu* init_ppu(u8* memory) {
   bppu* ppu = (bppu*)malloc(sizeof(bppu));
 
@@ -25,5 +28,7 @@ void run_ppu(bppu* ppu) {
 
   *ppu->PPUSTATUSreg = 0xff;
   // printf("%d\n", *ppu->PPUSTATUSreg);
+
+}
 
 }

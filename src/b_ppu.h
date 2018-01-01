@@ -2,6 +2,9 @@
 #define PPU_H_
 #include "bit_nes.h"
 
+namespace BITNES
+{
+
 struct bppu{
   u8* PPUCTRLreg;
   u8* PPUMASKreg;
@@ -15,7 +18,8 @@ struct bppu{
   u8* memory;
 };
 
-extern bppu* init_ppu(u8* memory);
-extern void run_ppu(bppu* ppu);
+bppu* init_ppu(u8* memory);
+void run_ppu(bppu* ppu);
 
+}
 #endif

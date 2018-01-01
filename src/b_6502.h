@@ -6,6 +6,9 @@
 #include "b_ppu.h"
 #include "b_utils.h"
 
+namespace BITNES
+{
+
 struct b6502{
   u8 AReg, XReg, YReg, SPReg;
   bool Carry, Zero, Interrupt, Decimal, Break, Overflow, Negative;
@@ -14,8 +17,9 @@ struct b6502{
   uint cycles;
 };
 
-extern b6502* init_cpu(u8 *romBuffer, int romIndex);
-extern void run_cpu(b6502 *cpu, bppu* ppu);
-extern bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
+b6502* init_cpu(u8 *romBuffer, int romIndex);
+void run_cpu(b6502 *cpu, bppu* ppu);
+bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
 
+}
 #endif

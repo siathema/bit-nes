@@ -3,15 +3,18 @@
 #include <stdio.h>
 #include "b_6502.h"
 
-#define KILOBYTE_16 16384
+#define KILOBYTE(size) (i64)(size * 1024)
 
-b6502* init_cpu(u8 *romBuffer, int romIndex) { 
-  b6502* cpu = (b6502*)malloc(sizeof(b6502));
+namespace BITNES
+{
+
+b6502* init_cpu(u8 *romBuffer, int romIndex) {
+  b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
   cpu->PCReg = 0x8000;
   cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
   cpu->memory = (u8*)malloc(sizeof(char) * translate_address(0xffff));
   memset(cpu->memory, 0, translate_address(0xffff));
-  memcpy(cpu->memory + translate_address(0x8000) ,romBuffer + romIndex, KILOBYTE_16);
+  memcpy(cpu->memory + translate_address(0x8000) ,romBuffer + romIndex, KILOBYTE(16));
 
   return cpu;
 }
@@ -46,7 +49,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
       else
 	cpu->PCReg += (int8_t)opcodeAddress[1];
     }
-  
+
     cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
@@ -121,3 +124,4 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   return reset;
 }
 
+}
