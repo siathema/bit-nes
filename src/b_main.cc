@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "bit_nes.h"
 #include "b_6502.h"
 #include "b_ppu.h"
+#include "b_log.h"
 
 namespace BITNES
 {
@@ -29,14 +31,13 @@ namespace BITNES
       index++;
       temp = fgetc(romFile);
     }
-
+    Log("Read in rom file.\n");
     /*
       for(int i=0; i<count; i++) {
       printf("%02X ", rom_buffer[i]&0x00ff);
       }
       printf("\n");
     */
-
     //NOTE(matthias): emulation begins here
 
     u8 k16Pages = romBuffer[4];
@@ -64,10 +65,11 @@ namespace BITNES
     free(cpu->memory);
     free(cpu);
     free(ppu);
-
+    LogERROR("killed Emulation!\n");
     return 0;
   }
 }
+
 int main(int argc, char** argv) {
 
   if(argc < 2 || argc > 2) {

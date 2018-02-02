@@ -13,3 +13,4 @@ build.ninja
 cmake_install.cmake
 compile_commands.json
 rules.ninja
+bitnes.log

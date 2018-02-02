@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "b_6502.h"
+#include "b_log.h"
 
 #define KILOBYTE(size) (i64)(size * 1024)
 
@@ -15,6 +16,7 @@ b6502* init_cpu(u8 *romBuffer, int romIndex) {
   cpu->memory = (u8*)malloc(sizeof(char) * translate_address(0xffff));
   memset(cpu->memory, 0, translate_address(0xffff));
   memcpy(cpu->memory + translate_address(0x8000) ,romBuffer + romIndex, KILOBYTE(16));
+
 
   return cpu;
 }
@@ -33,7 +35,11 @@ void run_cpu(b6502 *cpu, bppu *ppu) {
 
 bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   u8 opcode = *opcodeAddress;
-
+#if DEBUG_PRINT
+  char message[18];
+  sprintf(message, "Instruction: %s\n", opcode_to_mnemonic(opcode));
+  Log(message);
+#endif
   bool reset = false;
 
   u16 address = opcodeAddress[2] << 8;
