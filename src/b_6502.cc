@@ -9,7 +9,7 @@
 namespace BITNES
 {
 
-b6502* init_cpu(u8 *romBuffer, int romIndex) {
+  b6502* init_cpu(u8 *romBuffer, int romIndex) {
   b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
   cpu->PCReg = 0x8000;
   cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
@@ -44,6 +44,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 
   u16 address = opcodeAddress[2] << 8;
   address |= opcodeAddress[1];
+  u8 result = 0;
 
   // decode opcode
   switch(opcode) {
@@ -51,13 +52,12 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   case 0x10: // BPL - Relative - Branch if Positive
     if(!(cpu->Negative)) {
       if((int8_t)opcodeAddress[1] > 0)
-	cpu->PCReg += opcodeAddress[1];
+        cpu->PCReg += opcodeAddress[1];
       else
-	cpu->PCReg += (int8_t)opcodeAddress[1];
+        cpu->PCReg += (int8_t)opcodeAddress[1];
     }
-
-    cpu->PCReg += 2;
-    cpu->cycles += 2;
+      cpu->PCReg += 2;
+      cpu->cycles += 2;
     break;
 
   case 0x78: // SEI - Set Interrupt Disable
@@ -111,7 +111,58 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
     cpu->PCReg += 3;
-    cpu->cycles += 4;
+    cpu->cycles += 4; //(TODO)matthias: Implement cycle increase if crossing page boundry.
+    break;
+
+  case 0xB0: // BCS - Relative mode - branch if carry set
+    if(cpu->Carry) {
+      if((int8_t)opcodeAddress[1] > 0)
+        cpu->PCReg += opcodeAddress[1];
+      else
+        cpu->PCReg += (int8_t)opcodeAddress[1];
+      cpu->cycles++; //(TODO)matthias: Implement cycle increase if crossing page boundry.
+    } else
+    cpu->PCReg += 2;
+    cpu->cycles += 2;
+    break;
+
+  case 0xBD: // LDA - Absolute,X mode - Load Accumulator
+    cpu->AReg = cpu->memory[translate_address(address + cpu->XReg)];
+    cpu->Zero = cpu->Negative = 0;
+    cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
+    cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
+    cpu->PCReg += 3;
+    cpu->cycles += 4; //(TODO)matthias: Implement cycle increase if crossing page boundry.
+    break;
+
+  case 0xCA: // DEX - Implied - Decrement X register
+    cpu->XReg--;
+    cpu->Zero = cpu->XReg == 0;
+    cpu->Negative = (cpu->XReg & 0x80) != 0;
+    cpu->PCReg++;
+    cpu->cycles += 2;
+    break;
+
+  case 0xC9: // CMP - Immediate mode - Compare Accumulator
+    result = cpu->AReg - opcodeAddress[1];
+    cpu->Zero = cpu->Negative = cpu->Carry = 0;
+    cpu->Zero = result == 0; // A == M
+    cpu->Negative = (cpu->AReg & 0x80) != 0;// A is Negative
+    cpu->Carry = result <= 0; // A >= M
+    cpu->PCReg += 2;
+    cpu->cycles += 2;
+    break;
+
+  case 0xD0: // BNE - Relative Mode - If Zero flag is clear branck
+    if(!cpu->Zero) {
+      if((int8_t)opcodeAddress[1] > 0)
+        cpu->PCReg += opcodeAddress[1];
+      else
+        cpu->PCReg += (int8_t)opcodeAddress[1];
+      cpu->cycles++; //(TODO)matthias: Implement cycle increase if crossing page boundry.
+    } else
+      cpu->PCReg += 2;
+    cpu->cycles += 2;
     break;
 
   case 0xD8: // CLD - Clear Decimal Mode
@@ -122,6 +173,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 
   default:
     printf("%02X  ", opcode&0x00ff);
+    printf("%s\n", opcode_to_mnemonic(opcode));
     printf("Undefined opcode, halting\n");
     reset = true;
     break;

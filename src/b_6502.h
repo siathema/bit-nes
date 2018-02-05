@@ -21,8 +21,5 @@ b6502* init_cpu(u8 *romBuffer, int romIndex);
 void run_cpu(b6502 *cpu, bppu* ppu);
 bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
 
- void ADC(
-
-
 }
 #endif
