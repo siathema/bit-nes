@@ -10,12 +10,13 @@ namespace BITNES
 {
 
   b6502* init_cpu(u8 *romBuffer, int romIndex) {
-  b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
-  cpu->PCReg = 0x8000;
-  cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
-  cpu->memory = (u8*)malloc(sizeof(char) * translate_address(0xffff));
-  memset(cpu->memory, 0, translate_address(0xffff));
-  memcpy(cpu->memory + translate_address(0x8000) ,romBuffer + romIndex, KILOBYTE(16));
+    b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
+    cpu->PCReg = 0x8000;
+    cpu->SPReg = 0xFF;
+    cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
+    cpu->memory = (u8*)malloc(sizeof(char) * translate_address(0xffff));
+    memset(cpu->memory, 0, translate_address(0xffff));
+    memcpy(cpu->memory + translate_address(0x8000) ,romBuffer + romIndex, KILOBYTE(16));
 
 
   return cpu;
@@ -45,6 +46,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   u16 address = opcodeAddress[2] << 8;
   address |= opcodeAddress[1];
   u8 result = 0;
+  u16 programAddress = 0;
 
   // decode opcode
   switch(opcode) {
@@ -60,8 +62,25 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
       cpu->cycles += 2;
     break;
 
+  case 0x20: // JSR - Absolute mode - Jump to subroutine
+    programAddress = cpu->PCReg;
+    // programAddress--;
+    push_stack(cpu, programAddress>>8);
+    push_stack(cpu, programAddress);
+    cpu->PCReg = translate_address(address);
+    cpu->cycles += 6;
+    break;
+
   case 0x78: // SEI - Set Interrupt Disable
     cpu->Interrupt = true;
+    cpu->PCReg++;
+    cpu->cycles += 2;
+    break;
+
+  case 0x88: // DEY - Implied mode - Decrement Y register
+    cpu->YReg--;
+    cpu->Zero = cpu->YReg == 0;
+    cpu->Negative = (cpu->YReg & 0x80) != 0;
     cpu->PCReg++;
     cpu->cycles += 2;
     break;
@@ -78,7 +97,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0xa0:
+  case 0xa0: // STY - Immediate - Store in Y register
     cpu->YReg = opcodeAddress[1];
     cpu->Zero = cpu->Negative = false;
     cpu->Zero = cpu->YReg == 0 ? true : false; // Setting zero flag
@@ -180,6 +199,18 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   }
 
   return reset;
+}
+
+u8 pop_stack(b6502 *cpu) {
+  u16 stackPointer = 0x100 | cpu->SPReg;
+  cpu->SPReg++;
+  return cpu->memory[translate_address(stackPointer)];
+}
+
+void push_stack(b6502 *cpu, u8 data) {
+  u16 stackPointer = 0x0100 | cpu->SPReg;
+  cpu->memory[translate_address(stackPointer)] = data;
+  cpu->SPReg--;
 }
 
 }

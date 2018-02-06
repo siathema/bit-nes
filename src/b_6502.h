@@ -20,6 +20,7 @@ struct b6502{
 b6502* init_cpu(u8 *romBuffer, int romIndex);
 void run_cpu(b6502 *cpu, bppu* ppu);
 bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
-
+u8 pop_stack(b6502 *cpu);
+void push_stack(b6502 *cpu, u8 data);
 }
 #endif
