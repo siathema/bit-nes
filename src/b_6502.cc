@@ -47,10 +47,10 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   u8 result = 0;
   u16 programAddress = 0;
 
-  // decode opcode
+  //NOTE(matthias): decode opcode
   switch(opcode) {
 
-  case 0x10: // BPL - Relative - Branch if Positive
+  case 0x10: //NOTE(matthias): BPL - Relative - Branch if Positive
     if(!(cpu->Negative)) {
       if((int8_t)opcodeAddress[1] > 0)
         cpu->PCReg += opcodeAddress[1];
@@ -61,7 +61,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
       cpu->cycles += 2;
     break;
 
-  case 0x20: // JSR - Absolute mode - Jump to subroutine
+  case 0x20: //NOTE(matthias): JSR - Absolute mode - Jump to subroutine
     printf("PC->%0X\n", cpu->PCReg);
     programAddress = cpu->PCReg;
     programAddress--;
@@ -72,13 +72,13 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 6;
     break;
 
-  case 0x78: // SEI - Set Interrupt Disable
+  case 0x78: //NOTE(matthias): SEI - Set Interrupt Disable
     cpu->Interrupt = true;
     cpu->PCReg++;
     cpu->cycles += 2;
     break;
 
-  case 0x88: // DEY - Implied mode - Decrement Y register
+  case 0x88: //NOTE(matthias): DEY - Implied mode - Decrement Y register
     cpu->YReg--;
     cpu->Zero = cpu->YReg == 0;
     cpu->Negative = (cpu->YReg & 0x80) != 0;
@@ -86,55 +86,74 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0x8D: // STA - Absolute mode Store Accumulator
+  case 0x85: //NOTE(matthias): STA - Zero Page - mode - Store Acumulator
+    cpu->memory[opcodeAddress[1]] = cpu->AReg;
+    cpu->PCReg += 2;
+    cpu->cycles += 3;
+    break;
+
+  case 0x86: //NOTE(matthias): STX - Zero Page - mode - Store X register
+    cpu->memory[opcodeAddress[1]] = cpu->XReg;
+    cpu->PCReg += 2;
+    cpu->cycles += 3;
+    break;
+
+  case 0x8D: //NOTE(matthias): STA - Absolute mode Store Accumulator
     cpu->memory[address] = cpu->AReg;
     cpu->PCReg += 3;
     cpu->cycles += 4;
     break;
 
-  case 0x9a: // TXS - Implied - Transfer X to Stack Pointer
+  case 0x91: //NOTE(matthias): STA - (Indirect, Y) - Store Accumulator
+    address = (cpu->memory[opcodeAddress[1]]) + cpu->YReg;
+    cpu->memory[address] = cpu->AReg;
+    cpu->PCReg += 2;
+    cpu->cycles += 6;
+    break;
+
+  case 0x9a: //NOTE(matthias): TXS - Implied - Transfer X to Stack Pointer
     cpu->SPReg = cpu->XReg;
     cpu->PCReg++;
     cpu->cycles += 2;
     break;
 
-  case 0xa0: // STY - Immediate - Store in Y register
+  case 0xa0: //NOTE(matthias): STY - Immediate - Store in Y register
     cpu->YReg = opcodeAddress[1];
     cpu->Zero = cpu->Negative = false;
-    cpu->Zero = cpu->YReg == 0 ? true : false; // Setting zero flag
+    cpu->Zero = cpu->YReg == 0 ? true : false;
     cpu->Negative = (cpu->YReg & 0x80) != 0 ? true : false; // Setting negative flag
     cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
 
-  case 0xa2: // LDX - Immediate mode - Load X Register
+  case 0xa2: //NOTE(matthias): LDX - Immediate mode - Load X Register
     cpu->XReg = opcodeAddress[1];
     cpu->Zero = cpu->Negative = false;
-    cpu->Zero = cpu->XReg == 0 ? true : false; // Setting zero flag
+    cpu->Zero = cpu->XReg == 0 ? true : false;
     cpu->Negative = (cpu->XReg & 0x80) != 0 ? true : false; // Setting negative flag
     cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
 
-  case 0xa9: // LDA - Immediate mode
+  case 0xa9: //NOTE(matthias): LDA - Immediate mode
     cpu->AReg = opcodeAddress[1];
     cpu->Zero = cpu->Negative = 0;
-    cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
+    cpu->Zero = cpu->AReg == 0 ? true : false;
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
     cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
 
-  case 0xad: // LDA - Absolute mode - Load Accumulator
+  case 0xad: //NOTE(matthias): LDA - Absolute mode - Load Accumulator
     cpu->AReg = cpu->memory[address];
     cpu->Zero = cpu->Negative = 0;
-    cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
+    cpu->Zero = cpu->AReg == 0 ? true : false;
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
     cpu->PCReg += 3;
     cpu->cycles += 4; //(TODO)matthias: Implement cycle increase if crossing page boundry.
     break;
 
-  case 0xB0: // BCS - Relative mode - branch if carry set
+  case 0xB0: //NOTE(matthias): BCS - Relative mode - branch if carry set
     if(cpu->Carry) {
       if((int8_t)opcodeAddress[1] > 0)
         cpu->PCReg += opcodeAddress[1];
@@ -146,16 +165,16 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0xBD: // LDA - Absolute,X mode - Load Accumulator
+  case 0xBD: //NOTE(matthias): LDA - Absolute,X mode - Load Accumulator
     cpu->AReg = cpu->memory[address + cpu->XReg];
     cpu->Zero = cpu->Negative = 0;
-    cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
-    cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
+    cpu->Zero = cpu->AReg == 0 ? true : false;
+    cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false;
     cpu->PCReg += 3;
     cpu->cycles += 4; //(TODO)matthias: Implement cycle increase if crossing page boundry.
     break;
 
-  case 0xCA: // DEX - Implied - Decrement X register
+  case 0xCA: //NOTE(matthias): DEX - Implied - Decrement X register
     cpu->XReg--;
     cpu->Zero = cpu->XReg == 0;
     cpu->Negative = (cpu->XReg & 0x80) != 0;
@@ -163,7 +182,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0xC9: // CMP - Immediate mode - Compare Accumulator
+  case 0xC9: //NOTE(matthias): CMP - Immediate mode - Compare Accumulator
     result = cpu->AReg - opcodeAddress[1];
     cpu->Zero = cpu->Negative = cpu->Carry = 0;
     cpu->Zero = result == 0; // A == M
@@ -173,7 +192,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0xD0: // BNE - Relative Mode - If Zero flag is clear branck
+  case 0xD0: //NOTE(matthias): BNE - Relative Mode - If Zero flag is clear branch
     if(!cpu->Zero) {
       if((int8_t)opcodeAddress[1] > 0)
         cpu->PCReg += opcodeAddress[1];
@@ -185,9 +204,19 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0xD8: // CLD - Clear Decimal Mode
+  case 0xD8: //NOTE(matthias): CLD - Clear Decimal Mode
     cpu->Decimal = false;
     cpu->PCReg++;
+    cpu->cycles += 2;
+    break;
+
+  case 0xE0: //NOTE(matthias): CPX - Immediate mode - Compare X register
+    result = cpu->XReg - opcodeAddress[1];
+    cpu->Zero = cpu->Negative = cpu->Carry = 0;
+    cpu->Zero = result == 0; // X == M
+    cpu->Negative = (cpu->XReg & 0x80) != 0;// A is Negative
+    cpu->Carry = result <= 0; // X >= M
+    cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
 
