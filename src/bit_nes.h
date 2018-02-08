@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define PAGE_SIZE 256
+
 namespace BITNES
 {
 

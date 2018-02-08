@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include "b_6502.h"
 #include "b_log.h"
-
-#define KILOBYTE(size) (i64)(size * 1024)
+#include "b_utils.h"
 
 namespace BITNES
 {
@@ -14,9 +13,9 @@ namespace BITNES
     cpu->PCReg = 0x8000;
     cpu->SPReg = 0xFF;
     cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
-    cpu->memory = (u8*)malloc(sizeof(char) * translate_address(0xffff));
-    memset(cpu->memory, 0, translate_address(0xffff));
-    memcpy(cpu->memory + translate_address(0x8000) ,romBuffer + romIndex, KILOBYTE(16));
+    cpu->memory = (u8*)malloc(sizeof(char) * 0xffff);
+    memset(cpu->memory, 0, 0xffff);
+    memcpy(cpu->memory + 0x8000 ,romBuffer + romIndex, KILOBYTE(16));
 
 
   return cpu;
@@ -26,7 +25,7 @@ void run_cpu(b6502 *cpu, bppu *ppu) {
   bool reset = false;
 
   while(!reset) {
-    reset = run_opcode(&cpu->memory[translate_address(cpu->PCReg)], cpu);
+    reset = run_opcode(&cpu->memory[cpu->PCReg], cpu);
 
     for(int i=0; i<3; i++) {
       run_ppu(ppu);
@@ -63,11 +62,13 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0x20: // JSR - Absolute mode - Jump to subroutine
+    printf("PC->%0X\n", cpu->PCReg);
     programAddress = cpu->PCReg;
-    // programAddress--;
+    programAddress--;
     push_stack(cpu, programAddress>>8);
     push_stack(cpu, programAddress);
-    cpu->PCReg = translate_address(address);
+    cpu->PCReg = address;
+    printf("PC->%0X\n", cpu->PCReg);
     cpu->cycles += 6;
     break;
 
@@ -86,7 +87,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0x8D: // STA - Absolute mode Store Accumulator
-    cpu->memory[translate_address(address)] = cpu->AReg;
+    cpu->memory[address] = cpu->AReg;
     cpu->PCReg += 3;
     cpu->cycles += 4;
     break;
@@ -125,7 +126,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0xad: // LDA - Absolute mode - Load Accumulator
-    cpu->AReg = cpu->memory[translate_address(address)];
+    cpu->AReg = cpu->memory[address];
     cpu->Zero = cpu->Negative = 0;
     cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
@@ -146,7 +147,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0xBD: // LDA - Absolute,X mode - Load Accumulator
-    cpu->AReg = cpu->memory[translate_address(address + cpu->XReg)];
+    cpu->AReg = cpu->memory[address + cpu->XReg];
     cpu->Zero = cpu->Negative = 0;
     cpu->Zero = cpu->AReg == 0 ? true : false; // Setting zero flag
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
@@ -204,12 +205,12 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 u8 pop_stack(b6502 *cpu) {
   u16 stackPointer = 0x100 | cpu->SPReg;
   cpu->SPReg++;
-  return cpu->memory[translate_address(stackPointer)];
+  return cpu->memory[stackPointer];
 }
 
 void push_stack(b6502 *cpu, u8 data) {
   u16 stackPointer = 0x0100 | cpu->SPReg;
-  cpu->memory[translate_address(stackPointer)] = data;
+  cpu->memory[stackPointer] = data;
   cpu->SPReg--;
 }
 

@@ -4,16 +4,6 @@
 namespace BITNES
 {
 
-u32 translate_address(u16 address) {
-
-  u8 high = address >> 8;
-  u8 low = address & 0x00ff;
-  i32 addressIndex = high * 0xff;
-  addressIndex += low;
-
-  return addressIndex;
-}
-
 const char* opcode_to_mnemonic(u8 opcode) {
   char* mnemonic = 0;
 

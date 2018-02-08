@@ -6,6 +6,7 @@
 #include "b_6502.h"
 #include "b_ppu.h"
 #include "b_log.h"
+#include "b_utils.h"
 
 namespace BITNES
 {
