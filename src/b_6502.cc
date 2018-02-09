@@ -8,14 +8,14 @@
 namespace BITNES
 {
 
-  b6502* init_cpu(u8 *romBuffer, int romIndex) {
+  b6502* init_cpu(u8 *romBuffer, int romIndex, MapperType mapper) {
     b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
-    cpu->PCReg = 0x8000;
+    cpu->PCReg = 0xc000;
     cpu->SPReg = 0xFF;
     cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
     cpu->memory = (u8*)malloc(sizeof(char) * 0xffff);
     memset(cpu->memory, 0, 0xffff);
-    memcpy(cpu->memory + 0x8000 ,romBuffer + romIndex, KILOBYTE(16));
+    memcpy(cpu->memory + 0xc000 ,romBuffer + romIndex, KILOBYTE(16));
 
 
   return cpu;
@@ -70,6 +70,11 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->PCReg = address;
     printf("PC->%0X\n", cpu->PCReg);
     cpu->cycles += 6;
+    break;
+
+  case 0x4C: //NOTE(matthias): JMP - absolute mode - Jump to address
+    cpu->PCReg = address;
+    cpu->cycles +=  3;
     break;
 
   case 0x78: //NOTE(matthias): SEI - Set Interrupt Disable

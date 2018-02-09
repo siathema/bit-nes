@@ -40,7 +40,7 @@ namespace BITNES
       printf("\n");
     */
     //NOTE(matthias): emulation begins here
-
+    //NOTE(matthias): Mapper 000: 16KB or 128KB PRG rom non-switchable banks. If 16KB rom mirror 0x8000-bfff at 0xc000 - 0xffff.
     u8 k16Pages = romBuffer[4];
 
     printf("%d 16k pages\n",k16Pages );
@@ -57,7 +57,7 @@ namespace BITNES
       PRGROMIndex += 512;
     }
 
-    b6502* cpu = init_cpu(romBuffer, PRGROMIndex);
+    b6502* cpu = init_cpu(romBuffer, PRGROMIndex, M000);
     bppu* ppu = init_ppu(cpu->memory);
 
     run_cpu(cpu, ppu);

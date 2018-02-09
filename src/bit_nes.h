@@ -2,6 +2,8 @@
 #define BIT_NES_H_
 
 #include <stdint.h>
+#include "b_6502.h"
+#inlcude "b_ppu.h"
 
 #define PAGE_SIZE 256
 
@@ -16,6 +18,14 @@ typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
+
+ struct nes {
+   b6502* cpu;
+   bppu* ppu;
+   MapperType mapper;
+ };
+
+ nes* init_nes(u8* rom, u32 PRGROMIndex, MapperType mapper);
 
 }
 #endif
