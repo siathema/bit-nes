@@ -6,12 +6,10 @@
 #include "b_ppu.h"
 #include "b_utils.h"
 
+
+
 namespace BITNES
 {
-  enum MapperType {
-    M000,
-    COUNT
-  };
 
   struct b6502{
     u8 AReg, XReg, YReg, SPReg;
@@ -21,9 +19,9 @@ namespace BITNES
     uint cycles;
   };
 
-  b6502* init_cpu(u8 *romBuffer, int romIndex, MapperType mapper);
-  void run_cpu(b6502 *cpu, bppu* ppu);
-  bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
+  b6502* init_cpu(u8 *memory);
+  void run_cpu(b6502 *cpu, bppu* ppu, nes* nes);
+  bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes);
   u8 pop_stack(b6502 *cpu);
   void push_stack(b6502 *cpu, u8 data);
 }

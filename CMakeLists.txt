@@ -17,6 +17,7 @@ set(SOURCES
   src/b_6502.cc
   src/b_ppu.cc
   src/b_utils.cc
-  src/b_log.cc )
+  src/b_log.cc
+  src/bit_nes.cc )
 
 add_executable(bit-nes ${SOURCES})

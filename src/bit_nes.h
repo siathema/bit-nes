@@ -2,10 +2,10 @@
 #define BIT_NES_H_
 
 #include <stdint.h>
-#include "b_6502.h"
-#inlcude "b_ppu.h"
 
 #define PAGE_SIZE 256
+#define ROM_START 0x8000
+#define MEM_SIZE 0xffff
 
 namespace BITNES
 {
@@ -19,13 +19,26 @@ typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
 
- struct nes {
-   b6502* cpu;
-   bppu* ppu;
-   MapperType mapper;
+ struct b6502;
+ struct bppu;
+
+enum MapperType {
+  M000_16K,
+  M000_32K,
+  COUNT
  };
 
- nes* init_nes(u8* rom, u32 PRGROMIndex, MapperType mapper);
+struct nes {
+  b6502* cpu;
+  bppu* ppu;
+  u8* memory;
+  MapperType mapper;
+ };
+
+ nes* init_nes(u8* rom,  MapperType mapper);
+ u8* init_memory(u8* rom, MapperType mapper);
+ u8 read_memory(u16 address, nes* nes);
+ void write_memory(u16 address, u8 value, nes* nes);
 
 }
 #endif

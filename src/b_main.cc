@@ -57,15 +57,14 @@ namespace BITNES
       PRGROMIndex += 512;
     }
 
-    b6502* cpu = init_cpu(romBuffer, PRGROMIndex, M000);
-    bppu* ppu = init_ppu(cpu->memory);
-
-    run_cpu(cpu, ppu);
+    nes* nes = init_nes(romBuffer+PRGROMIndex, M000_16K);
+    run_cpu(nes->cpu, nes->ppu, nes); //TODO(matthias):Get rid of redundancy
 
     free(romBuffer);
-    free(cpu->memory);
-    free(cpu);
-    free(ppu);
+    free(nes->memory);
+    free(nes->cpu);
+    free(nes->ppu);
+    free(nes);
     LogERROR("killed Emulation!\n");
     return 0;
   }

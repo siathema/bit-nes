@@ -4,28 +4,25 @@
 #include "b_6502.h"
 #include "b_log.h"
 #include "b_utils.h"
+#include "bit_nes.h"
 
 namespace BITNES
 {
 
-  b6502* init_cpu(u8 *romBuffer, int romIndex, MapperType mapper) {
+  b6502* init_cpu(u8 *memory) {
     b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
     cpu->PCReg = 0xc000;
     cpu->SPReg = 0xFF;
     cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
-    cpu->memory = (u8*)malloc(sizeof(char) * 0xffff);
-    memset(cpu->memory, 0, 0xffff);
-    memcpy(cpu->memory + 0xc000 ,romBuffer + romIndex, KILOBYTE(16));
-
-
-  return cpu;
+    cpu->memory = memory;
+    return cpu;
 }
 
-void run_cpu(b6502 *cpu, bppu *ppu) {
+void run_cpu(b6502 *cpu, bppu *ppu, nes* nes) {
   bool reset = false;
 
   while(!reset) {
-    reset = run_opcode(&cpu->memory[cpu->PCReg], cpu);
+    reset = run_opcode(&cpu->memory[cpu->PCReg], cpu, nes);
 
     for(int i=0; i<3; i++) {
       run_ppu(ppu);
@@ -33,7 +30,7 @@ void run_cpu(b6502 *cpu, bppu *ppu) {
   }
 }
 
-bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
+bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
   u8 opcode = *opcodeAddress;
 #if DEBUG_PRINT
   char message[18];
@@ -92,26 +89,26 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0x85: //NOTE(matthias): STA - Zero Page - mode - Store Acumulator
-    cpu->memory[opcodeAddress[1]] = cpu->AReg;
+    write_memory(opcodeAddress[1], cpu->AReg, nes);
     cpu->PCReg += 2;
     cpu->cycles += 3;
     break;
 
   case 0x86: //NOTE(matthias): STX - Zero Page - mode - Store X register
-    cpu->memory[opcodeAddress[1]] = cpu->XReg;
+    write_memory(opcodeAddress[1], cpu->XReg, nes);
     cpu->PCReg += 2;
     cpu->cycles += 3;
     break;
 
   case 0x8D: //NOTE(matthias): STA - Absolute mode Store Accumulator
-    cpu->memory[address] = cpu->AReg;
+    write_memory(address, cpu->AReg, nes);
     cpu->PCReg += 3;
     cpu->cycles += 4;
     break;
 
   case 0x91: //NOTE(matthias): STA - (Indirect, Y) - Store Accumulator
-    address = (cpu->memory[opcodeAddress[1]]) + cpu->YReg;
-    cpu->memory[address] = cpu->AReg;
+    address = read_memory(opcodeAddress[1], nes) + cpu->YReg;
+    write_memory(address, cpu->AReg, nes);
     cpu->PCReg += 2;
     cpu->cycles += 6;
     break;
@@ -150,7 +147,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0xad: //NOTE(matthias): LDA - Absolute mode - Load Accumulator
-    cpu->AReg = cpu->memory[address];
+    cpu->AReg = read_memory(address, nes);
     cpu->Zero = cpu->Negative = 0;
     cpu->Zero = cpu->AReg == 0 ? true : false;
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
@@ -171,7 +168,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   case 0xBD: //NOTE(matthias): LDA - Absolute,X mode - Load Accumulator
-    cpu->AReg = cpu->memory[address + cpu->XReg];
+    cpu->AReg = read_memory(address + cpu->XReg, nes);
     cpu->Zero = cpu->Negative = 0;
     cpu->Zero = cpu->AReg == 0 ? true : false;
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false;
