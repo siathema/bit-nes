@@ -18,11 +18,11 @@ namespace BITNES
     return cpu;
 }
 
-void run_cpu(b6502 *cpu, bppu *ppu, nes* nes) {
+void run_cpu(b6502 *cpu, bppu *ppu) {
   bool reset = false;
 
   while(!reset) {
-    reset = run_opcode(&cpu->memory[cpu->PCReg], cpu, nes);
+    reset = run_opcode(&cpu->memory[cpu->PCReg], cpu);
 
     for(int i=0; i<3; i++) {
       run_ppu(ppu);
@@ -30,7 +30,7 @@ void run_cpu(b6502 *cpu, bppu *ppu, nes* nes) {
   }
 }
 
-bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
+bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   u8 opcode = *opcodeAddress;
 #if DEBUG_PRINT
   char message[18];
@@ -58,6 +58,12 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
       cpu->cycles += 2;
     break;
 
+  case 0x18: //NOTE(matthias): CLC - Implied mode - Clear carry
+    cpu->Carry = false;
+    cpu->PCReg++;
+    cpu->cycles += 2;
+    break;
+
   case 0x20: //NOTE(matthias): JSR - Absolute mode - Jump to subroutine
     printf("PC->%0X\n", cpu->PCReg);
     programAddress = cpu->PCReg;
@@ -67,6 +73,12 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
     cpu->PCReg = address;
     printf("PC->%0X\n", cpu->PCReg);
     cpu->cycles += 6;
+    break;
+
+  case 0x38: //NOTE(matthias): SEC - Implied mode - Set Carry Flag
+    cpu->Carry = true;
+    cpu->PCReg++;
+    cpu->cycles += 2;
     break;
 
   case 0x4C: //NOTE(matthias): JMP - absolute mode - Jump to address
@@ -89,26 +101,38 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
     break;
 
   case 0x85: //NOTE(matthias): STA - Zero Page - mode - Store Acumulator
-    write_memory(opcodeAddress[1], cpu->AReg, nes);
+    write_memory(opcodeAddress[1], cpu->AReg, cpu->nes);
     cpu->PCReg += 2;
     cpu->cycles += 3;
     break;
 
   case 0x86: //NOTE(matthias): STX - Zero Page - mode - Store X register
-    write_memory(opcodeAddress[1], cpu->XReg, nes);
+    write_memory(opcodeAddress[1], cpu->XReg, cpu->nes);
     cpu->PCReg += 2;
     cpu->cycles += 3;
     break;
 
   case 0x8D: //NOTE(matthias): STA - Absolute mode Store Accumulator
-    write_memory(address, cpu->AReg, nes);
+    write_memory(address, cpu->AReg, cpu->nes);
     cpu->PCReg += 3;
     cpu->cycles += 4;
     break;
 
+  case 0x90: //NOTE(matthia): BCC - Relative mode - Branck if carry is clear
+    if(!cpu->Carry) {
+      if((int8_t)opcodeAddress[1] > 0)
+        cpu->PCReg += opcodeAddress[1];
+      else
+        cpu->PCReg += (int8_t)opcodeAddress[1];
+      cpu->cycles++; //(TODO)matthias: Implement cycle increase if crossing page boundry.
+    } else
+      cpu->PCReg += 2;
+    cpu->cycles += 2;
+    break;
+
   case 0x91: //NOTE(matthias): STA - (Indirect, Y) - Store Accumulator
-    address = read_memory(opcodeAddress[1], nes) + cpu->YReg;
-    write_memory(address, cpu->AReg, nes);
+    address = read_memory(opcodeAddress[1], cpu->nes) + cpu->YReg;
+    write_memory(address, cpu->AReg, cpu->nes);
     cpu->PCReg += 2;
     cpu->cycles += 6;
     break;
@@ -147,7 +171,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
     break;
 
   case 0xad: //NOTE(matthias): LDA - Absolute mode - Load Accumulator
-    cpu->AReg = read_memory(address, nes);
+    cpu->AReg = read_memory(address, cpu->nes);
     cpu->Zero = cpu->Negative = 0;
     cpu->Zero = cpu->AReg == 0 ? true : false;
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false; // Setting negative flag
@@ -168,7 +192,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
     break;
 
   case 0xBD: //NOTE(matthias): LDA - Absolute,X mode - Load Accumulator
-    cpu->AReg = read_memory(address + cpu->XReg, nes);
+    cpu->AReg = read_memory(address + cpu->XReg, cpu->nes);
     cpu->Zero = cpu->Negative = 0;
     cpu->Zero = cpu->AReg == 0 ? true : false;
     cpu->Negative = (cpu->AReg & 0x80) != 0 ? true : false;
@@ -222,6 +246,11 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
     cpu->cycles += 2;
     break;
 
+  case 0xEA: //NOTE(matthias): NOP - Implied mode - increments PC
+    cpu->PCReg++;
+    cpu->cycles += 2;
+    break;
+
   default:
     printf("%02X  ", opcode&0x00ff);
     printf("%s\n", opcode_to_mnemonic(opcode));
@@ -236,12 +265,13 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes) {
 u8 pop_stack(b6502 *cpu) {
   u16 stackPointer = 0x100 | cpu->SPReg;
   cpu->SPReg++;
-  return cpu->memory[stackPointer];
+  return read_memory(stackPointer, cpu->nes);
 }
 
 void push_stack(b6502 *cpu, u8 data) {
   u16 stackPointer = 0x0100 | cpu->SPReg;
   cpu->memory[stackPointer] = data;
+  write_memory(stackPointer, data, cpu->nes);
   cpu->SPReg--;
 }
 

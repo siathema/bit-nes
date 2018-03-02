@@ -17,11 +17,12 @@ namespace BITNES
     u16 PCReg;
     u8 *memory;
     uint cycles;
+    nes *nes;
   };
 
   b6502* init_cpu(u8 *memory);
-  void run_cpu(b6502 *cpu, bppu* ppu, nes* nes);
-  bool run_opcode(u8 *opcodeAddress, b6502 *cpu, nes* nes);
+  void run_cpu(b6502 *cpu, bppu* ppu);
+  bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
   u8 pop_stack(b6502 *cpu);
   void push_stack(b6502 *cpu, u8 data);
 }

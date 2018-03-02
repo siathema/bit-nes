@@ -33,12 +33,7 @@ namespace BITNES
       temp = fgetc(romFile);
     }
     Log("Read in rom file.\n");
-    /*
-      for(int i=0; i<count; i++) {
-      printf("%02X ", rom_buffer[i]&0x00ff);
-      }
-      printf("\n");
-    */
+
     //NOTE(matthias): emulation begins here
     //NOTE(matthias): Mapper 000: 16KB or 128KB PRG rom non-switchable banks. If 16KB rom mirror 0x8000-bfff at 0xc000 - 0xffff.
     u8 k16Pages = romBuffer[4];
@@ -58,7 +53,7 @@ namespace BITNES
     }
 
     nes* nes = init_nes(romBuffer+PRGROMIndex, M000_16K);
-    run_cpu(nes->cpu, nes->ppu, nes); //TODO(matthias):Get rid of redundancy
+    run_cpu(nes->cpu, nes->ppu); //TODO(matthias):Get rid of redundancy //NOTE(matthias): What the fuck do I mean here?
 
     free(romBuffer);
     free(nes->memory);

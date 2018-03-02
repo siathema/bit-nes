@@ -14,8 +14,8 @@ nes* init_nes(u8* rom, MapperType mapper) {
 
   NES->mapper = mapper;
   NES->cpu = init_cpu(NES->memory);
+  NES->cpu->nes = NES;
   NES->ppu = init_ppu(NES->memory);
-
   return NES;
 }
 
