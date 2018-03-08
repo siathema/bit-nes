@@ -38,14 +38,18 @@ namespace BITNES
     //NOTE(matthias): Mapper 000: 16KB or 128KB PRG rom non-switchable banks. If 16KB rom mirror 0x8000-bfff at 0xc000 - 0xffff.
     u8 k16Pages = romBuffer[4];
 
-    printf("%d 16k pages\n",k16Pages );
+    char debugMessage[64];
+
+    sprintf(debugMessage,"%d 16k pages\n",k16Pages );
+    Log(debugMessage);
 
     int PRGROMIndex = 16;
 
     int mapperNum = (romBuffer[7] & 0xf0);
     mapperNum |= (romBuffer[6] & 0xf0) >> 4;
 
-    printf("Mapper:%d\n", mapperNum);
+    sprintf(debugMessage,"Mapper:%d\n", mapperNum);
+    Log(debugMessage);
 
     if((romBuffer[6] & 0x04) != 0) {
       printf("Trainer");
