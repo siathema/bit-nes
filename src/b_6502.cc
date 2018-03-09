@@ -13,7 +13,8 @@ namespace BITNES
     b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
     cpu->PCReg = 0x8000;
     cpu->SPReg = 0xFD;
-    cpu->Carry = cpu->Zero = cpu->Interrupt = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
+    cpu->Carry = cpu->Zero = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
+    cpu->Interrupt = true;
     cpu->memory = memory;
     return cpu;
 }
@@ -30,6 +31,16 @@ void run_cpu(b6502 *cpu, bppu *ppu) {
   }
 }
 
+void set_status(u8 data, b6502 *cpu) {
+  cpu->Carry = (data & 0x01) != 0;
+  cpu->Zero = (data & 0x02) != 0;
+  cpu->Interrupt = (data & 0x04) != 0;
+  cpu->Decimal = (data & 0x08) != 0;
+  cpu->Break = false;
+  cpu->Overflow = (data & 0x40) != 0;
+  cpu->Negative = (data & 0x80) != 0;
+}
+
 u8 status_flags(b6502 *cpu) {
   u8 result = 0;
 
@@ -41,8 +52,8 @@ u8 status_flags(b6502 *cpu) {
     result |= 0x04;
   if(cpu->Decimal)
     result |= 0x08;
-  if(cpu->Break)
-    result |= 0x10;
+  //if(cpu->Break)
+    //result |= 0x10;
   result |= 0x20;
   if(cpu->Overflow)
     result |= 0x40;
@@ -57,26 +68,62 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 #if DEBUG_PRINT
   char message[400];
 
-  sprintf(message,"%0X %0X %0X %0X %s            A:%0X X:%0X Y:%0X P:? SP:%0X CYC:%d  ", cpu->PCReg, opcodeAddress[0], opcodeAddress[1], opcodeAddress[2], opcode_to_mnemonic(opcode), cpu->AReg, cpu->XReg, cpu->YReg, cpu->SPReg, cpu->cycles);
+  sprintf(message,"%04X %02X %02X %02X %s            A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n  ", cpu->PCReg, opcodeAddress[0], opcodeAddress[1], opcodeAddress[2], opcode_to_mnemonic(opcode), cpu->AReg, cpu->XReg, cpu->YReg, status_flags(cpu), cpu->SPReg, cpu->cycles);
   Log(message);
 
-  sprintf(message, "Carry: %d, Zero: %d, Interrupt: %d, Decimal: %d, Break: %d, Overflow: %d, Negative: %d\n", cpu->Carry, cpu->Zero, cpu->Interrupt, cpu->Decimal, cpu->Break, cpu->Overflow, cpu->Negative);
-  Log(message);
+  //sprintf(message, "Carry: %d, Zero: %d, Interrupt: %d, Decimal: %d, Break: %d, Overflow: %d, Negative: %d\n", cpu->Carry, cpu->Zero, cpu->Interrupt, cpu->Decimal, cpu->Break, cpu->Overflow, cpu->Negative);
+  //Log(message);
 #endif
   bool reset = false;
 
   u16 address = opcodeAddress[2] << 8;
   address |= opcodeAddress[1];
   u8 result = 0;
+  u16 result16 = 0;
   u16 programAddress = 0;
 
   //NOTE(matthias): decode opcode
   switch(opcode) {
 
+  case 0x01: //NOTE(matthias): ORA - Indirect,X mode - Bit-wise OR
+    programAddress = read_memory(opcodeAddress[1]+cpu->XReg, cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+cpu->XReg+1, cpu->nes) << 8;
+    cpu->AReg |= read_memory(programAddress, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 6;
+    break;
+
+  case 0x05: //NOTE(matthias): ORA - Zero page mode - Bit-wise OR
+    cpu->AReg |= read_memory(opcodeAddress[1], cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 3;
+    break;
+
   case 0x08: //NOTE(matthias): PHP - Implied - Push status flags to stack
+    //cpu->Break = true;
     push_stack(cpu, status_flags(cpu) | 0x10); //NOTE(matthias): PHP sets Break bit in status reg
     cpu->Break = true;
     cpu->PCReg++;
+    cpu->cycles += 4;
+    break;
+
+  case 0x09: //NOTE(matthias): ORA - Immediate mode - Bit-wise OR
+    cpu->AReg |= opcodeAddress[1];
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 2;
+    break;
+
+  case 0x0D: //NOTE(matthias): ORA - Absolute mode - Bit-wise OR
+    cpu->AReg |= read_memory(address, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
     cpu->cycles += 4;
     break;
 
@@ -91,10 +138,44 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
+  case 0x11: //NOTE(matthias): ORA - Indirect,Y - Bit-wise OR
+    programAddress = read_memory(opcodeAddress[1], cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+1, cpu->nes) << 8;
+    cpu->AReg |= read_memory((programAddress+cpu->YReg), cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 5;
+    break;
+
+  case 0x15: //NOTE(matthias): ORA - Zero page, X mode - Bit-wise OR
+    cpu->AReg |= read_memory(opcodeAddress[1]+cpu->XReg, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 4;
+    break;
+
   case 0x18: //NOTE(matthias): CLC - Implied mode - Clear carry
     cpu->Carry = false;
     cpu->PCReg++;
     cpu->cycles += 2;
+    break;
+
+  case 0x19: //NOTE(matthias): ORA - Absolute,Y mode - Bit-wise OR
+    cpu->AReg |= read_memory((address+cpu->YReg), cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
+    break;
+
+  case 0x1D: //NOTE(matthias): ORA - Absolute,X mode - Bit-wise OR
+    cpu->AReg |= read_memory((address+cpu->XReg), cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
     break;
 
   case 0x20: //NOTE(matthias): JSR - Absolute mode - Jump to subroutine
@@ -120,8 +201,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 
   case 0x24: //NOTE(matthias): BIT - Zero page mode - Bit test
     result = read_memory(opcodeAddress[1], cpu->nes);
-    result &= cpu->AReg;
-    cpu->Zero = result == 0;
+    cpu->Zero = (result & cpu->AReg) == 0;
     cpu->Overflow = (result&0x40) != 0;
     cpu->Negative = (result&0x80) != 0;
     cpu->PCReg += 2;
@@ -134,6 +214,12 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->Negative = (cpu->AReg & 0x80) != 0;
     cpu->PCReg += 2;
     cpu->cycles += 3;
+    break;
+
+  case 0x28: //NOTE(matthias): PLP - Implied mode - pop stack into status register
+    set_status(pop_stack(cpu), cpu);
+    cpu->PCReg += 1;
+    cpu->cycles += 4;
     break;
 
   case 0x29: //NOTE(matthias): AND - Immediate mode - Bit-wise and
@@ -163,7 +249,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
-  case 0x35: //NOTE(matthias): AND - Indirect,Y - Bit-wise and
+  case 0x31: //NOTE(matthias): AND - Indirect,Y - Bit-wise and
     programAddress = read_memory(opcodeAddress[1], cpu->nes);
     programAddress |= read_memory(opcodeAddress[1]+1, cpu->nes) << 8;
     cpu->AReg &= read_memory((programAddress+cpu->YReg), cpu->nes);
@@ -171,6 +257,14 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->Negative = (cpu->AReg & 0x80) != 0;
     cpu->PCReg += 2;
     cpu->cycles += 5;
+    break;
+
+  case 0x35: //NOTE(matthias): AND - Zero page, X mode - Bit-wise AND
+    cpu->AReg &= read_memory(opcodeAddress[1]+cpu->XReg, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 4;
     break;
 
   case 0x38: //NOTE(matthias): SEC - Implied mode - Set Carry Flag
@@ -195,9 +289,49 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 4;
     break;
 
+  case 0x41: //NOTE(matthias): EOR - Indirect,X mode - Bit-wise XOR
+    programAddress = read_memory(opcodeAddress[1]+cpu->XReg, cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+cpu->XReg+1, cpu->nes) << 8;
+    cpu->AReg ^= read_memory(programAddress, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 6;
+    break;
+
+  case 0x45: //NOTE(matthias): EOR - Zero page mode - Bit-wise XOR
+    cpu->AReg ^= read_memory(opcodeAddress[1], cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 3;
+    break;
+
+  case 0x48: //NOTE(matthias): PHA - Implied mode - push A on the stack
+    push_stack(cpu, cpu->AReg);
+    cpu->PCReg += 1;
+    cpu->cycles += 3;
+    break;
+
+  case 0x49: //NOTE(matthias): EOR - Immediate mode - Bit-wise XOR
+    cpu->AReg ^= opcodeAddress[1];
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 2;
+    break;
+
   case 0x4C: //NOTE(matthias): JMP - absolute mode - Jump to address
     cpu->PCReg = address;
     cpu->cycles +=  3;
+    break;
+
+  case 0x4D: //NOTE(matthias): EOR - Absolute mode - Bit-wise XOR
+    cpu->AReg ^= read_memory(address, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
     break;
 
   case 0x50: //NOTE(matthias): BVC - Relative - Branch if Overflow Clear
@@ -211,6 +345,40 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
+  case 0x51: //NOTE(matthias): EOR - Indirect,Y - Bit-wise XOR
+    programAddress = read_memory(opcodeAddress[1], cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+1, cpu->nes) << 8;
+    cpu->AReg ^= read_memory((programAddress+cpu->YReg), cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 5;
+    break;
+
+  case 0x55: //NOTE(matthias): EOR - Zero page mode, X - Bit-wise XOR
+    cpu->AReg ^= read_memory(opcodeAddress[1] + cpu->XReg, cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 4;
+    break;
+
+  case 0x59: //NOTE(matthias): EOR - Absolute,Y mode - Bit-wise XOR
+    cpu->AReg ^= read_memory((address+cpu->YReg), cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
+    break;
+
+  case 0x5D: //NOTE(matthias): EOR - Absolute,X mode - Bit-wise XOR
+    cpu->AReg ^= read_memory((address+cpu->XReg), cpu->nes);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
+    break;
+
   case 0x60: //NOTE(matthias): RTS - Implied Mode - Return from subroutine
     programAddress = pop_stack(cpu);
     programAddress |= pop_stack(cpu) << 8;
@@ -220,8 +388,26 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 
   case 0x68: //NOTE(matthias): PLA - Implied - pull Accumulator
     cpu->AReg = pop_stack(cpu);
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
     cpu->PCReg++;
     cpu->cycles += 4;
+    break;
+
+  case 0x69: //NOTE(matthias): ADC - Immediate mode - Add with Carry
+    result16 = cpu->AReg + opcodeAddress[1];
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 2;
     break;
 
   case 0x70: //NOTE(matthias): BVS - Relative - Branch if Overflow set
@@ -341,6 +527,12 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
+  case 0xB8: //NOTE(matthias): CLV - Implied mode - clear Overflow flag
+    cpu->Overflow = false;
+    cpu->PCReg++;
+    cpu->cycles +=2;
+    break;
+
   case 0xBD: //NOTE(matthias): LDA - Absolute,X mode - Load Accumulator
     cpu->AReg = read_memory(address + cpu->XReg, cpu->nes);
     cpu->Zero = cpu->Negative = 0;
@@ -362,8 +554,8 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     result = cpu->AReg - opcodeAddress[1];
     cpu->Zero = cpu->Negative = cpu->Carry = 0;
     cpu->Zero = result == 0; // A == M
-    cpu->Negative = (cpu->AReg & 0x80) != 0;// A is Negative
-    cpu->Carry = result <= 0; // A >= M
+    cpu->Negative = (result & 0x80) != 0;// A is Negative
+    cpu->Carry = cpu->AReg >= opcodeAddress[1]; // A >= M
     cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
@@ -375,8 +567,8 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
       else
         cpu->PCReg += (int8_t)opcodeAddress[1];
       cpu->cycles++; //(TODO)matthias: Implement cycle increase if crossing page boundry.
-    } else
-      cpu->PCReg += 2;
+    }
+    cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
 

@@ -6,6 +6,7 @@ namespace BITNES
 
 const char* opcode_to_mnemonic(u8 opcode) {
   const char* mnemonic = 0;
+  i32 opcodeSize = 1;
 
   switch(opcode) {
   case 0x01: case 0x05: case 0x09: case 0x0D: case 0x11: case 0x15: case 0x19: case 0x1D:
