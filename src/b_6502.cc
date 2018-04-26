@@ -386,6 +386,40 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 6;
     break;
 
+  case 0x61: //NOTE(matthias): ADC - Indirect mode,X  - Add with Carry
+    programAddress = read_memory(opcodeAddress[1]+cpu->XReg, cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+cpu->XReg+1, cpu->nes) << 8;
+    result16 = cpu->AReg + read_memory(programAddress, cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 6;
+    break;
+
+  case 0x65: //NOTE(matthias): ADC - Zero page mode - Add with Carry
+    result16 = cpu->AReg + read_memory(opcodeAddress[1], cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 3;
+    break;
+
   case 0x68: //NOTE(matthias): PLA - Implied - pull Accumulator
     cpu->AReg = pop_stack(cpu);
     cpu->Zero = cpu->AReg == 0;
@@ -410,6 +444,22 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
+  case 0x6D: //NOTE(matthias): ADC - Absolute mode - Add with Carry
+    result16 = cpu->AReg + read_memory(address, cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
+    break;
+
   case 0x70: //NOTE(matthias): BVS - Relative - Branch if Overflow set
     if((cpu->Overflow)) {
       if((int8_t)opcodeAddress[1] > 0)
@@ -421,10 +471,77 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
+  case 0x71: //NOTE(matthias): ADC - Indirect mode,X  - Add with Carry
+    programAddress = read_memory(opcodeAddress[1], cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+1, cpu->nes) << 8;
+    result16 = cpu->AReg + read_memory(programAddress + cpu->YReg, cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 6;
+    break;
+
+  case 0x75: //NOTE(matthias): ADC - Zero page mode, X - Add with Carry
+    result16 = cpu->AReg + read_memory(opcodeAddress[1] + cpu->XReg, cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 4;
+    break;
+
   case 0x78: //NOTE(matthias): SEI - Set Interrupt Disable
     cpu->Interrupt = true;
     cpu->PCReg++;
     cpu->cycles += 2;
+    break;
+
+
+  case 0x79: //NOTE(matthias): ADC - Absolute mode,Y  - Add with Carry
+    result16 = cpu->AReg + read_memory((address+cpu->YReg), cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
+    break;
+
+  case 0x7D: //NOTE(matthias): ADC - Absolute mode,X  - Add with Carry
+    result16 = cpu->AReg + read_memory((address+cpu->XReg), cpu->nes);
+    result16 += cpu->Carry ? 1 : 0;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    cpu->Carry = result16 > 0xFF ? true : false;
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
     break;
 
   case 0x88: //NOTE(matthias): DEY - Implied mode - Decrement Y register
@@ -542,12 +659,32 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 4; //(TODO)matthias: Implement cycle increase if crossing page boundry.
     break;
 
-  case 0xCA: //NOTE(matthias): DEX - Implied - Decrement X register
-    cpu->XReg--;
-    cpu->Zero = cpu->XReg == 0;
-    cpu->Negative = (cpu->XReg & 0x80) != 0;
-    cpu->PCReg++;
+  case 0xC0: //NOTE(matthias): CPY - Immediate mode - Compare Y Register
+    result = cpu->YReg - opcodeAddress[1];
+    cpu->Zero = cpu->Negative = cpu->Carry = 0;
+    cpu->Zero = result == 0; // A == M
+    cpu->Negative = (result & 0x80) != 0;// A is Negative
+    cpu->Carry = cpu->YReg >= opcodeAddress[1]; // A >= M
+    cpu->PCReg += 2;
     cpu->cycles += 2;
+    break;
+
+  case 0xC4: //NOTE(matthias): CPY - Zero Page mode - Compare Y Register
+    result = cpu->YReg - read_memory(opcodeAddress[1], cpu->nes);
+    cpu->Zero = cpu->Negative = cpu->Carry = 0;
+    cpu->Zero = result == 0; // A == M
+    cpu->Negative = (result & 0x80) != 0;// A is Negative
+    cpu->Carry = cpu->YReg >= opcodeAddress[1]; // A >= M
+    cpu->PCReg += 2;
+    cpu->cycles += 4;
+    break;
+
+  case 0xC8: //NOTE(matthias): INY - Implied mide - Increment Y Register
+    cpu->YReg += 1;
+    cpu->Zero = cpu->YReg == 0;
+    cpu->Negative = (cpu->YReg & 0x80) != 0;
+    cpu->PCReg++;
+    cpu->cycles +=2;
     break;
 
   case 0xC9: //NOTE(matthias): CMP - Immediate mode - Compare Accumulator
@@ -558,6 +695,24 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->Carry = cpu->AReg >= opcodeAddress[1]; // A >= M
     cpu->PCReg += 2;
     cpu->cycles += 2;
+    break;
+
+  case 0xCA: //NOTE(matthias): DEX - Implied - Decrement X register
+    cpu->XReg--;
+    cpu->Zero = cpu->XReg == 0;
+    cpu->Negative = (cpu->XReg & 0x80) != 0;
+    cpu->PCReg++;
+    cpu->cycles += 2;
+    break;
+
+  case 0xCC: //NOTE(matthias): CPY - Absolute mode - Compare Y Register
+    result = cpu->YReg - read_memory(address, cpu->nes);
+    cpu->Zero = cpu->Negative = cpu->Carry = 0;
+    cpu->Zero = result == 0; // A == M
+    cpu->Negative = (result & 0x80) != 0;// A is Negative
+    cpu->Carry = cpu->YReg >= opcodeAddress[1]; // A >= M
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
     break;
 
   case 0xD0: //NOTE(matthias): BNE - Relative Mode - If Zero flag is clear branch
@@ -582,8 +737,61 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     result = cpu->XReg - opcodeAddress[1];
     cpu->Zero = cpu->Negative = cpu->Carry = 0;
     cpu->Zero = result == 0; // X == M
-    cpu->Negative = (cpu->XReg & 0x80) != 0;// A is Negative
-    cpu->Carry = result <= 0; // X >= M
+    cpu->Negative = (result & 0x80) != 0;// A is Negative
+    cpu->Carry = cpu->XReg >= opcodeAddress[1]; // X >= M
+    cpu->PCReg += 2;
+    cpu->cycles += 2;
+    break;
+
+  case 0xE1: //NOTE(matthias): SBC - Indirect,X  mode - Subtract with Carry
+    programAddress = read_memory(opcodeAddress[1], cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+1, cpu->nes) << 8;
+    result16 = cpu->AReg - read_memory(programAddress, cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 6;
+    break;
+
+  case 0xE5: //NOTE(matthias): SBC - Zero Page mode - Subtract with Carry
+    result16 = cpu->AReg - read_memory(opcodeAddress[1], cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 3;
+    break;
+
+  case 0xE9: //NOTE(matthias): SBC - Immediate mode - Subtract with Carry
+    result16 = cpu->AReg - opcodeAddress[1];
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = false;
+    } else {
+      cpu->Overflow = true;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
     cpu->PCReg += 2;
     cpu->cycles += 2;
     break;
@@ -591,6 +799,23 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   case 0xEA: //NOTE(matthias): NOP - Implied mode - increments PC
     cpu->PCReg++;
     cpu->cycles += 2;
+    break;
+
+  case 0xED: //NOTE(matthias): SBC - Absolute mode - Subtract with Carry
+    result16 = cpu->AReg - read_memory(address, cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~(cpu->AReg ^ opcodeAddress[1]) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
     break;
 
   case 0xF0: //NOTE(matthia): BEQ - Relative mode - Branck if Zero is set
@@ -605,10 +830,80 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     cpu->cycles += 2;
     break;
 
+  case 0xF1: //NOTE(matthias): SBC - Indirect,Y  mode - Subtract with Carry
+    programAddress = read_memory(opcodeAddress[1], cpu->nes);
+    programAddress |= read_memory(opcodeAddress[1]+1, cpu->nes) << 8;
+    result16 = cpu->AReg - read_memory(programAddress + cpu->YReg, cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 5;
+    break;
+
+  case 0xF5: //NOTE(matthias): SBC - Zero Page,X mode - Subtract with Carry
+    result16 = cpu->AReg - read_memory(opcodeAddress[1] + cpu->XReg, cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 2;
+    cpu->cycles += 4;
+    break;
+
   case 0xF8: //NOTE(matthias): SED - Implied - Set Decimal Flag
     cpu->Decimal = true;
     cpu->PCReg++;
     cpu->cycles += 2;
+    break;
+
+  case 0xF9: //NOTE(matthias): SBC - Absolute,Y  mode - Subtract with Carry
+    result16 = cpu->AReg - read_memory(address + cpu->YReg, cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
+    break;
+
+  case 0xFD: //NOTE(matthias): SBC - Absolute,X  mode - Subtract with Carry
+    result16 = cpu->AReg - read_memory(address + cpu->XReg, cpu->nes);
+    result16 -= cpu->Carry ? 0 : 1;
+    if(~((cpu->AReg^ opcodeAddress[1])) & (cpu->AReg ^ (u8)result16) & 0x80) {
+      cpu->Overflow = true;
+    } else {
+      cpu->Overflow = false;
+    }
+    //cpu->Carry = !cpu->Carry;
+    cpu->Carry = !(result16 > 0xFF);
+    cpu->AReg = result16;
+    cpu->Zero = cpu->AReg == 0;
+    cpu->Negative = (cpu->AReg & 0x80) != 0;
+    cpu->PCReg += 3;
+    cpu->cycles += 4;
     break;
 
   default:
