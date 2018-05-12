@@ -25,7 +25,6 @@ u8* init_memory(u8* rom, MapperType mapper) {
   switch(mapper) {
   case M000_16K: // Super Mario Bros, nestest
     memcpy(memory + ROM_START, rom, KILOBYTE(16)*sizeof(char));
-    printf("test\n");
     memcpy(memory + 0xc000, rom, KILOBYTE(16)*sizeof(char));
     break;
 

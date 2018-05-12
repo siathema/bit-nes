@@ -907,9 +907,9 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     break;
 
   default:
-    printf("%02X  ", opcode&0x00ff);
-    printf("%s\n", opcode_to_mnemonic(opcode));
-    printf("Undefined opcode, halting\n");
+    sprintf(message,"%02X %s: Undefined opcode, halting\n", opcode&0x00ff, opcode_to_mnemonic(opcode));
+    Log(message);
+    printf(message);
     reset = true;
     break;
   }

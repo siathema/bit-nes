@@ -16,3 +16,4 @@ rules.ninja
 bitnes.log
 roms
 nestest.log
+Makefile
