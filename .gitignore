@@ -17,3 +17,5 @@ bitnes.log
 roms
 nestest.log
 Makefile
+.vs
+nestest.nes

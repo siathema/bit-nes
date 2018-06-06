@@ -16,7 +16,7 @@ namespace BITNES
     bool Carry, Zero, Interrupt, Decimal, Break, Overflow, Negative;
     u16 PCReg;
     u8 *memory;
-    uint cycles;
+    u32 cycles;
     nes *nes;
   };
 

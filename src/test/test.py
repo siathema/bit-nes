@@ -64,7 +64,7 @@ def test():
         bit_nes_index += 1
         nes_test_index += 1
 
-        if bit_nes_index >= bit_nes_length or nes_test_index >= nes_test_length:
+        if bit_nes_index >= bit_nes_length-2 or nes_test_index >= nes_test_length:
             print("Passed")
             no_error = False
             break

@@ -22,6 +22,18 @@ typedef int64_t i64;
  struct b6502;
  struct bppu;
 
+#define MEM_MAP_INTERNAL_RAM 0x0000
+#define MEM_MAP_RAM_MIRROR_0 0x0800
+#define MEM_MAP_RAM_MIRROR_1 0x1000
+#define MEM_MAP_RAM_MIRROR_2 0x1800
+
+#define MEM_MAP_PPU_REGS	 0x2000
+#define MEM_MAP_PPU_MIRROR	 0x2008
+
+#define MEM_MAP_APU_IO_REGS	 0x4000
+
+#define MEM_MAP_CARTRIDGE	 0x4020
+
 enum MapperType {
   M000_16K,
   M000_32K,
