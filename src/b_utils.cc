@@ -1,187 +1,210 @@
 #include "bit_nes.h"
+#include "b_6502.h"
 #include "b_utils.h"
+#include "b_log.h"
+#include <stdio.h>
 
 namespace BITNES
 {
+  void Instruction_Debug_Messege(nes* nes, u8* instruction)
+  {
+    char message[64] = {};
 
-const char* opcode_to_mnemonic(u8 opcode) {
-  const char* mnemonic = 0;
-  i32 opcodeSize = 1;
+    u32 position =0;
+    u16 counter = nes->cpu->PCReg;
+    u16 address = (instruction[2] << 8) | instruction[1];
+    u16 indirectZeroPageAddrY =  (((u16)read_memory(instruction[1]+1, nes) << 8) | (read_memory(instruction[1], nes)));
+    u16 indirectZeroPageAddrX =  (((u16)read_memory((nes->cpu->XReg)+instruction[1]+1, nes) << 8) | (read_memory((nes->cpu->XReg)+instruction[1], nes)));
 
-  switch(opcode) {
-  case 0x01: case 0x05: case 0x09: case 0x0D: case 0x11: case 0x15: case 0x19: case 0x1D:
-    mnemonic = "ORA";
-    break;
-  case 0x21: case 0x25: case 0x29: case 0x2D: case 0x31: case 0x35: case 0x39: case 0x3D:
-    mnemonic = "AND";
-    break;
-  case 0x41: case 0x45: case 0x49: case 0x4D: case 0x51: case 0x55: case 0x59: case 0x5D:
-    mnemonic = "EOR";
-    break;
-  case 0x61: case 0x65: case 0x69: case 0x6D: case 0x71: case 0x75: case 0x79: case 0x7D:
-    mnemonic = "ADC";
-    break;
-  case 0x81: case 0x85: case 0x8D: case 0x91: case 0x95: case 0x99: case 0x9D:
-    mnemonic = "STA";
-    break;
-  case 0xA1: case 0xA5: case 0xA9: case 0xAD: case 0xB1: case 0xB5: case 0xB9: case 0xBD:
-    mnemonic = "LDA";
-    break;
-  case 0xC1: case 0xC5: case 0xC9: case 0xCD: case 0xD1: case 0xD5: case 0xD9: case 0xDD:
-    mnemonic = "CMP";
-    break;
-  case 0xE1: case 0xE5: case 0xE9: case 0xED: case 0xF1: case 0xF5: case 0xF9: case 0xFD:
-    mnemonic = "SBC";
-    break;
-  case 0x06: case 0x0A: case 0x0E: case 0x16: case 0x1E:
-    mnemonic = "ASL";
-    break;
-  case 0x26: case 0x2A: case 0x2E: case 0x36: case 0x3E:
-    mnemonic = "ROL";
-    break;
-  case 0x46: case 0x4A: case 0x4E: case 0x56: case 0x5E:
-    mnemonic = "LSR";
-    break;
-  case 0x66: case 0x6A: case 0x6E: case 0x76: case 0x7E:
-    mnemonic = "ROR";
-    break;
-  case 0xA2: case 0xA6: case 0xAE: case 0xB6: case 0xBE:
-    mnemonic = "LDX";
-    break;
-  case 0xA0: case 0xA4: case 0xAC: case 0xB4: case 0xBC:
-    mnemonic = "LDY";
-    break;
-  case 0xC6: case 0xCE: case 0xD6: case 0xDE:
-    mnemonic = "DEC";
-    break;
-  case 0xE6: case 0xEE: case 0xF6: case 0xFE:
-    mnemonic = "INC";
-    break;
-  case 0x84: case 0x8C: case 0x94:
-    mnemonic = "STY";
-    break;
-  case 0x86: case 0x8E: case 0x96:
-    mnemonic = "STX";
-    break;
-  case 0xC0: case 0xC4: case 0xCC:
-    mnemonic = "CPY";
-    break;
-  case 0xE0: case 0xE4: case 0xEC:
-    mnemonic = "CPX";
-    break;
-  case 0x24: case 0x2C:
-    mnemonic = "BIT";
-    break;
-  case 0x4C: case 0x6C:
-    mnemonic = "JMP";
-    break;
-  case 0x00:
-    mnemonic = "BRK";
-    break;
-  case 0x08:
-    mnemonic = "PHP";
-    break;
-  case 0x10:
-    mnemonic = "BPL";
-    break;
-  case 0x18:
-    mnemonic = "CLC";
-    break;
-  case 0x20:
-    mnemonic = "JSR";
-    break;
-  case 0x28:
-    mnemonic = "PLP";
-    break;
-  case 0x30:
-    mnemonic = "BMI";
-    break;
-  case 0x38:
-    mnemonic = "SEC";
-    break;
-  case 0x40:
-    mnemonic = "RTI";
-    break;
-  case 0x48:
-    mnemonic = "PHA";
-    break;
-  case 0x50:
-    mnemonic = "BVC";
-    break;
-  case 0x58:
-    mnemonic = "CLI";
-    break;
-  case 0x60:
-    mnemonic = "RTS";
-    break;
-  case 0x68:
-    mnemonic = "PLA";
-    break;
-  case 0x70:
-    mnemonic = "BVS";
-    break;
-  case 0x78:
-    mnemonic = "SEI";
-    break;
-  case 0x88:
-    mnemonic = "DEY";
-    break;
-  case 0x8A:
-    mnemonic = "TXA";
-    break;
-  case 0x90:
-    mnemonic = "BCC";
-    break;
-  case 0x98:
-    mnemonic = "TYA";
-    break;
-  case 0x9A:
-    mnemonic = "TXS";
-    break;
-  case 0xA8:
-    mnemonic = "TAY";
-    break;
-  case 0xAA:
-    mnemonic = "TAX";
-    break;
-  case 0xB0:
-    mnemonic = "BCS";
-    break;
-  case 0xB8:
-    mnemonic = "CLV";
-    break;
-  case 0xBA:
-    mnemonic = "TSX";
-    break;
-  case 0xC8:
-    mnemonic = "INY";
-    break;
-  case 0xCA:
-    mnemonic = "DEX";
-    break;
-  case 0xD0:
-    mnemonic = "BNE";
-    break;
-  case 0xD8:
-    mnemonic = "CLD";
-    break;
-  case 0xE8:
-    mnemonic = "INX";
-    break;
-  case 0xEA:
-    mnemonic = "NOP";
-    break;
-  case 0xF0:
-    mnemonic = "BEQ";
-    break;
-  case 0xF8:
-    mnemonic = "SED";
-    break;
-  default:
-    mnemonic = "Invalid operation!";
-    break;
+    Instruction ins = Instructions[*instruction];
+    sprintf(message, "%04X  ", counter);
+    Log(message);
+    position = 6;
+
+    for(i32 i=0; i<ins.Length; i++)
+    {
+      sprintf(message, "%02X ", instruction[i]);
+      Log(message);
+      position += 3;
+    }
+
+    while(position<16)
+    {
+      Log(" ");
+      position++;
+    }
+    sprintf(message, "%s ", Mnemonics[ins.Name]);
+    Log(message);
+    position += 4;
+
+    switch(ins.Mode)
+    {
+    case Implicit:
+      break;
+    case Accumulator:
+      Log("A");
+      position++;
+      break;
+    case Immediate:
+      sprintf(message, "#$%02X", instruction[1]);
+      Log(message);
+      position += 4;
+      break;
+    case ZeroPage:
+      sprintf(message, "$%02X = %02X", instruction[1], read_memory(instruction[1], nes));
+      Log(message);
+      position += 8;
+      break;
+    case ZeroPageX:
+      sprintf(message, "$%02X,X @ %02X = %02X",
+              instruction[1],
+              (nes->cpu->XReg+instruction[1]),
+              read_memory(instruction[1], nes));
+      Log(message);
+      position += 14;
+      break;
+    case ZeroPageY:
+      sprintf(message, "$%02X,Y @ %02X = %02X",
+              instruction[1],
+              (nes->cpu->YReg+instruction[1]),
+              read_memory(instruction[1], nes));
+      Log(message);
+      position += 14;
+      break;
+    case Relative:
+      switch(ins.Name)
+      {
+      case BPL:
+        if(!nes->cpu->Negative)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BMI:
+        if(nes->cpu->Negative)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BVC:
+        if(!nes->cpu->Overflow)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BVS:
+        if(nes->cpu->Overflow)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BCC:
+        if(!nes->cpu->Carry)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BCS:
+        if(nes->cpu->Carry)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BNE:
+        if(!nes->cpu->Zero)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+
+      case BEQ:
+        if(nes->cpu->Zero)
+          sprintf(message, "$%04X", counter+(i8)instruction[1]);
+        else
+          sprintf(message, "$%04X", counter+2);
+        break;
+      default:
+        break;
+      }
+      Log(message);
+      position += 5;
+      break;
+    case Absolute:
+      if(ins.Name == JMP || ins.Name == JSR)
+      {
+        sprintf(message, "$%04X", address);
+        position += 5;
+      }
+      else
+      {
+        sprintf(message, "$%04X = %02X", address, read_memory(address, nes));
+        position += 10;
+      }
+      Log(message);
+      break;
+    case AbsoluteX:
+      sprintf(message, "$%04X,X @ %04X = %02X",
+              address,
+              (nes->cpu->XReg+address),
+              read_memory(address, nes));
+      Log(message);
+      position += 19;
+      break;
+    case AbsoluteY:
+      sprintf(message, "$%04X,Y @ %04X = %02X",
+              address,
+              (nes->cpu->YReg+address),
+              read_memory(address, nes));
+      Log(message);
+      position += 19;
+      break;
+    case Indirect:
+      sprintf(message, "($%04X) = %04X",
+              address,
+              (((u16)read_memory(address+1, nes) << 8) | (read_memory(address, nes))));
+      Log(message);
+      position += 13;
+      break;
+    case IndexedIndirect:
+      sprintf(message, "($%02X,X) @ %02X = %04X = %02X",
+              instruction[1],
+              instruction[1]+nes->cpu->XReg,
+              indirectZeroPageAddrX,
+              read_memory(indirectZeroPageAddrX, nes));
+      Log(message);
+      position += 24;
+      break;
+    case IndirectIndexed:
+      sprintf(message, "($%02X),Y = %04X @ %04X = %02X",
+              instruction[1],
+              indirectZeroPageAddrY,
+              nes->cpu->YReg+indirectZeroPageAddrY,
+              read_memory(nes->cpu->YReg+indirectZeroPageAddrY, nes));
+      Log(message);
+      position += 26;
+      break;
+    case Address_Mode_Count:
+    default:
+      Log("Invalid operation!");
+      break;
+    }
+    while(position<48)
+    {
+      Log(" ");
+      position++;
+    }
+
   }
 
+
+const char* opcode_to_mnemonic(u8 opcode) {
+  const char* mnemonic = Mnemonics[Instructions[opcode].Name];
   return mnemonic;
 }
 

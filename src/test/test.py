@@ -13,6 +13,13 @@ ADDRESS = 0;
 
 INSTRUCTION = 1;
 
+def print_Difference(bit_nes_msg, nes_test_msg, nes_line, bit_line):
+    print("Difference found!")
+    print("--------------Bit-nes Output--------------")
+    print(" Line: " + str(bit_line+1) + " " + bit_nes_msg)
+    print("--------------NesTest Output--------------")
+    print(" Line: " + str(nes_line+1) + " " + nes_test_msg)
+
 def test():
     """ Main entry point of the app """
     bit_nes_file = open("bitnes.log", 'r')
@@ -49,22 +56,18 @@ def test():
 
         if bit_nes_line[ADDRESS] != nes_test_line[ADDRESS] or bit_nes_line[INSTRUCTION] != nes_test_line[INSTRUCTION]:
             no_error = False
-            print("Difference found!")
-            print(bit_nes_log[bit_nes_index])
-            print(nes_test_log[nes_test_index])
+            print_Difference(bit_nes_log[bit_nes_index], nes_test_log[nes_test_index], nes_test_index, bit_nes_index)
 
         for i in range(25):
             if nes_test_data[i] != bit_nes_data[i]:
                 no_error = False
-                print("Difference found!")
-                print(bit_nes_log[bit_nes_index])
-                print(nes_test_log[nes_test_index])
+                print_Difference(bit_nes_log[bit_nes_index], nes_test_log[nes_test_index], nes_test_index, bit_nes_index)
                 break
 
         bit_nes_index += 1
         nes_test_index += 1
 
-        if bit_nes_index >= bit_nes_length-2 or nes_test_index >= nes_test_length:
+        if bit_nes_index == bit_nes_length-1 or nes_test_index == nes_test_length-1:
             print("Passed")
             no_error = False
             break

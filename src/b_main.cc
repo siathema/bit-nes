@@ -20,10 +20,9 @@ namespace BITNES
 		int count = 0;
 
 		while (fgetc(romFile) != EOF) {
-			
 			count++;
 		}
-		
+
 		u8 *romBuffer = (u8*)malloc(sizeof(u8)*count);
 		fseek(romFile, 0, SEEK_SET);
 
@@ -82,7 +81,7 @@ namespace BITNES
 int main(int argc, char** argv) {
 
 	if (argc < 2 || argc > 2) {
-		printf("Usage: bit-nes [Path to rom]\n");
+		printf("Usage: %s [Path to rom]\n", argv[0]);
 		return -1;
 	}
 	return BITNES::proc(argv[1]);

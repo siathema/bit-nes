@@ -67,8 +67,8 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   u8 opcode = *opcodeAddress;
 #if DEBUG_PRINT
   char message[400];
-
-  sprintf(message,"%04X %02X %02X %02X %s            A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n", cpu->PCReg, opcodeAddress[0], opcodeAddress[1], opcodeAddress[2], opcode_to_mnemonic(opcode), cpu->AReg, cpu->XReg, cpu->YReg, status_flags(cpu), cpu->SPReg, cpu->cycles);
+  Instruction_Debug_Messege(cpu->nes, opcodeAddress);
+  sprintf(message,"A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n",  cpu->AReg, cpu->XReg, cpu->YReg, status_flags(cpu), cpu->SPReg, cpu->cycles);
   Log(message);
 
   //sprintf(message, "Carry: %d, Zero: %d, Interrupt: %d, Decimal: %d, Break: %d, Overflow: %d, Negative: %d\n", cpu->Carry, cpu->Zero, cpu->Interrupt, cpu->Decimal, cpu->Break, cpu->Overflow, cpu->Negative);
@@ -181,7 +181,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 
   case 0x20: //NOTE(matthias): JSR - Absolute mode - Jump to subroutine
     //printf("PC->%0X\n", cpu->PCReg);
-    programAddress = cpu->PCReg;
+    programAddress = cpu->PCReg + (3-1);
     //programAddress--;
     push_stack(cpu, programAddress>>8);
     push_stack(cpu, programAddress);
@@ -383,7 +383,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   case 0x60: //NOTE(matthias): RTS - Implied Mode - Return from subroutine
     programAddress = pop_stack(cpu);
     programAddress |= pop_stack(cpu) << 8;
-    cpu->PCReg = programAddress + 3;
+    cpu->PCReg = programAddress + 1;
     cpu->cycles += 6;
     break;
 
@@ -1007,7 +1007,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   default:
     sprintf(message,"%02X %s: Undefined opcode, halting\n", opcode&0x00ff, opcode_to_mnemonic(opcode));
     Log(message);
-    printf(message);
+    printf("%s",message);
     reset = true;
     break;
   }
@@ -1016,16 +1016,15 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 }
 
 u8 pop_stack(b6502 *cpu) {
-  u16 stackPointer = 0x0100 | cpu->SPReg;
-  cpu->SPReg++;
+  u16 stackPointer = 0x0100 | ++cpu->SPReg;
   return read_memory(stackPointer, cpu->nes);
 }
 
 void push_stack(b6502 *cpu, u8 data) {
-  cpu->SPReg--;
   u16 stackPointer = 0x0100 | cpu->SPReg;
   //cpu->memory[stackPointer] = data;
   write_memory(stackPointer, data, cpu->nes);
+  cpu->SPReg--;
 }
 
 }
