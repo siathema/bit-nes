@@ -23,7 +23,7 @@ namespace BITNES
 
   b6502* init_cpu(u8 *memory);
   void run_cpu(b6502 *cpu, bppu* ppu);
-  bool run_opcode(u8 *opcodeAddress, b6502 *cpu);
+  void run_opcode(u8 *opcodeAddress, b6502 *cpu);
   void set_status(u8 data, b6502 *cpu);
   u8 status_flags(b6502* cpu);
   u8 pop_stack(b6502 *cpu);
