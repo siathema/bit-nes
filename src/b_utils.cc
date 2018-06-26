@@ -192,6 +192,7 @@ namespace BITNES
     case Address_Mode_Count:
     default:
       Log("Invalid operation!");
+      position += 21;
       break;
     }
     while(position<48)

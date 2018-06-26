@@ -1,0 +1,3 @@
+[submodule "Hajime"]
+	path = Hajime
+	url = https://github.com/siathema/Hajime.git

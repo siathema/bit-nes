@@ -21,6 +21,10 @@ set(SOURCES
 	src/b_ppu.cc
 	src/b_utils.cc
 	src/b_log.cc
-	src/bit_nes.cc )
+	src/bit_nes.cc
+	src/b_Ops.cc)
 
-add_executable(bit-nes ${SOURCES})
+  add_executable(bit-nes ${SOURCES})
+
+  target_include_directories( bit-nes PRIVATE
+    Hajime/src )

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "b_6502.h"
+#include "b_Ops.h"
 #include "b_log.h"
 #include "b_utils.h"
 #include "bit_nes.h"
@@ -13,7 +14,7 @@ namespace BITNES
     b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
     cpu->PCReg = 0x8000;
     cpu->SPReg = 0xFD;
-    cpu->Carry = cpu->Zero = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative = false;
+    cpu->Carry = cpu->Zero = cpu->Decimal = cpu->Break = cpu->Overflow = cpu->Negative, cpu->Reset = false;
     cpu->Interrupt = true;
     cpu->memory = memory;
     return cpu;
@@ -22,7 +23,7 @@ namespace BITNES
 void run_cpu(b6502 *cpu, bppu *ppu) {
   bool reset = false;
 
-  while(!reset) {
+  while(!cpu->Reset) {
     reset = run_opcode(&cpu->memory[cpu->PCReg], cpu);
 
     for(int i=0; i<3; i++) {
@@ -64,6 +65,8 @@ u8 status_flags(b6502 *cpu) {
 }
 
 bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
+//if(cpu->PCReg == 0xC77D)
+  //  __builtin_debugtrap();
   u8 opcode = *opcodeAddress;
 #if DEBUG_PRINT
   char message[400];
@@ -76,6 +79,13 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 #endif
   bool reset = false;
 
+#if 1
+  Instruction instruction = Instructions[opcode];
+  OP_Ptr operation = Ops[instruction.Name];
+  operation(opcodeAddress, cpu, instruction);
+
+
+#else
   u16 address = opcodeAddress[2] << 8;
   address |= opcodeAddress[1];
 
@@ -454,6 +464,7 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
       cpu->Overflow = false;
     }
     cpu->Carry = result16 > 0xFF ? true : false;
+
     cpu->AReg = result16;
     cpu->Zero = cpu->AReg == 0;
     cpu->Negative = (cpu->AReg & 0x80) != 0;
@@ -1008,9 +1019,10 @@ bool run_opcode(u8 *opcodeAddress, b6502 *cpu) {
     sprintf(message,"%02X %s: Undefined opcode, halting\n", opcode&0x00ff, opcode_to_mnemonic(opcode));
     Log(message);
     printf("%s",message);
-    reset = true;
+    cpu->Reset = true;
     break;
   }
+#endif
 
   return reset;
 }
