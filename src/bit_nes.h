@@ -45,6 +45,6 @@ struct nes {
  u8* init_memory(u8* rom, MapperType mapper);
  u8 read_memory(u16 address, nes* nes);
  void write_memory(u16 address, u8 value, nes* nes);
-
+ bool run_nes(nes* nes);
 }
 #endif

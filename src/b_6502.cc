@@ -20,15 +20,9 @@ namespace BITNES
     return cpu;
 }
 
-void run_cpu(b6502 *cpu, bppu *ppu) {
+void run_cpu(b6502 *cpu) {
 
-  while(!cpu->Reset) {
     run_opcode(&cpu->memory[cpu->PCReg], cpu);
-
-    for(int i=0; i<3; i++) {
-      run_ppu(ppu);
-    }
-  }
 }
 
 void set_status(u8 data, b6502 *cpu) {
@@ -74,6 +68,11 @@ void run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 #endif
 
   Instruction instruction = Instructions[opcode];
+  if(instruction.Mode == Invalid) {
+    cpu->Reset = true;
+    return;
+  }
+
   OP_Ptr operation = Ops[instruction.Name];
   operation(opcodeAddress, cpu, instruction);
 }

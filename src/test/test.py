@@ -29,7 +29,7 @@ def test():
     nes_test_log = list(nes_test_file)
 
     #let's sync the instruction lines
-    bit_nes_index = 4
+    bit_nes_index = 5
     nes_test_index = 1
     bit_nes_length = len(bit_nes_log)-1
     nes_test_length = len(nes_test_log)-1

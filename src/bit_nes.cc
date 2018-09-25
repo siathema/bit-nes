@@ -109,4 +109,20 @@ namespace BITNES {
 		}
 	}
 
+	bool run_nes(nes* nes)
+	{
+		i32 ppuPerCpu = 3;
+		bool result = false;
+
+		run_cpu(nes->cpu);
+
+		for(i32 cycle=0; cycle<ppuPerCpu; cycle++)
+		{
+			run_ppu(nes->ppu);
+		}
+
+		result = !nes->cpu->Reset;
+
+		return result;
+	}
 }

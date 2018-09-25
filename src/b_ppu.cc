@@ -19,7 +19,7 @@ bppu* init_ppu(u8* memory) {
   ppu->PPUADDRreg = memory + 0x2006;
   ppu->PPUDATAreg = memory + 0x2007;
   ppu->OAMDMA = memory + 0x4014;
-  ppu->memory = memory;
+  ppu->Memory = memory;
 
   return ppu;
 }
