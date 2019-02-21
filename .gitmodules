@@ -1,6 +1,0 @@
-[submodule "Hajime"]
-	path = Hajime
-	url = https://github.com/siathema/Hajime.git
-[submodule "bitTGA"]
-	path = bitTGA
-	url = https://github.com/siathema/bitTGA.git
