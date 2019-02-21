@@ -40,7 +40,7 @@ namespace BITNES {
 	}
 
 	u8 read_memory(u16 address, nes* nes) {
-		Assert(address <= 0xFFFF, "Read out of bounds!");
+		assert(address <= 0xFFFF);
 		switch (nes->mapper) {
 		case M000_16K:
 			if (address >= 0xc000) //NOTE(matthias): memory is mirrored here
@@ -60,7 +60,7 @@ namespace BITNES {
 	}
 
 	void write_memory(u16 address, u8 value, nes* nes) {
-		Assert(address <= 0xFFFF, "Write out of bounds!");
+		assert(address <= 0xFFFF);
 		//NOTE(matthias): Internal ram is Mirrored every 0x800 bytes until 0x2000
 		if (address < MEM_MAP_PPU_REGS) {
 			nes->memory[address] = value;

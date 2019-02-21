@@ -14,7 +14,6 @@
 #include "b_ppu.h"
 #include "b_log.h"
 #include "b_utils.h"
-#include "TGA_Lib.h"
 
 namespace BITNES
 {
@@ -29,31 +28,6 @@ namespace BITNES
 		u32 TextureID;
 	};
 
-	Internal void Take_ScreenShot(u8* pixels, u32 width, u32 height)
-	{
-		TGA_Lib::TGA_File* file = TGA_Lib::TGA_Generate_File(width, height);
-
-		for(u32 row=0; row<width; row++)
-		{
-			for(u32 col=0; col<width; col++)
-			{
-				u8 R = *pixels++;
-				u8 G = *pixels++;
-				u8 B = *pixels++;
-				u8 A = *pixels++;
-				TGA_Lib::TGA_Color color(R, B, G, A);
-
-				TGA_Lib::TGA_Put_Pixel(file, col, row, color);
-
-				//TGA_Lib::TGA_Flip_Image_Vertical(file);
-
-				TGA_Lib::TGA_Write_To_File(file, "screenshot.tga");
-				//free(file->data.Image_Data);
-				//free(file);
-			}
-		}
-	}
-
 	char* Get_Source_From_File(const char* path)
 	{
 		char* result;
@@ -67,10 +41,10 @@ namespace BITNES
 		u32 count = 0;
 		while (fgetc(fp) != EOF) count++;
 		fseek(fp, 0, SEEK_SET);
-		Assert(count > 0 ,"File not opened\n");
+		assert(count > 0);
 
 		result = (char*)malloc(sizeof(i8) * count + 1);
-		Assert(result, "Memory not Allocated\n");
+		assert(result);
 
 		for (u32 i = 0; i < count + 1; i++)
 		{
@@ -273,7 +247,7 @@ namespace BITNES
 				for(i32 tileRow=0; tileRow<8; tileRow++)
 				{
                     //if(tableRow==15 && tableCol==15) __builtin_debugtrap();
-                    Assert(dest <= (pixels+(SCREEN_WIDTH*SCREEN_HEIGHT*4)), "Overwiting Pixel Buffer");
+                    assert(dest <= (pixels+(SCREEN_WIDTH*SCREEN_HEIGHT*4)));
 					u8* plane0 = source;
 					u8* plane1 = source + 8;
                     if(tableRow==16 && tableCol==16)
@@ -429,7 +403,6 @@ namespace BITNES
 					}break;
 					case SDLK_F3:
 					{
-						Take_ScreenShot(pixels, SCREEN_WIDTH, SCREEN_HEIGHT);
 					}break;
 					default:
 					{

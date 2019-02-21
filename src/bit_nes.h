@@ -2,11 +2,26 @@
 #define BIT_NES_H_
 
 #include <stdint.h>
-#include "hajime.hpp"
+#include <assert.h>
 
 #define PAGE_SIZE 256
 #define ROM_START 0x8000
 #define MEM_SIZE 0xffff
+
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t  i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+
+typedef float r32;
+typedef double r64;
+
 
 namespace BITNES
 {

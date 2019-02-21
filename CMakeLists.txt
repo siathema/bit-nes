@@ -18,8 +18,6 @@ else() #MSVC
 	set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG_PRINT=1 /MTd /Od")
 endif()
 
-add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/bitTGA)
-
 set(SOURCES
 	src/b_main.cc
 	src/b_6502.cc
@@ -31,15 +29,10 @@ set(SOURCES
 
   add_executable(bit-nes ${SOURCES})
 
-  target_include_directories( bit-nes PRIVATE
-    Hajime/src
-    bitTGA/src)
-
   if(LINUX)
 	target_link_libraries( bit-nes LINK_PUBLIC
                            ${OPENGL_LIBRARIES}
                            ${SDL2_LIBRARY}
                            GLEW
-                           SDL2
-                           TGA_Lib )
+                           SDL2 )
   endif()
