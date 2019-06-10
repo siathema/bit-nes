@@ -9,10 +9,10 @@ endif()
 if(LINUX)
     find_package(SDL2 REQUIRED)
     find_package(OpenGL REQUIRED)
-	set(CMAKE_C_COMPILER /usr/bin/clang)
-	set(CMAKE_CXX_COMPILER /usr/bin/clang++)
-	set(CMAKE_CXX_FLAGS "-Wall -g -DDEBUG_PRINT -std=c++11 -fcolor-diagnostics")
-	set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+	set(CMAKE_C_COMPILER /usr/bin/gcc)
+	set(CMAKE_CXX_COMPILER /usr/bin/gcc)
+	set(CMAKE_CXX_FLAGS "-Wall -g -DDEBUG_PRINT -std=c++11") #-fcolor-diagnostics")
+	#set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 else() #MSVC
 	set(CMAKE_CXX_FLAGS "-DWIN32=1 -DWIN64=1 /EHsc /Zi /MP ") #/F NUM to change default stack size.
 	set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG_PRINT=1 /MTd /Od")
@@ -34,5 +34,5 @@ set(SOURCES
                            ${OPENGL_LIBRARIES}
                            ${SDL2_LIBRARY}
                            GLEW
-                           SDL2 )
+		   	   SDL2 )
   endif()

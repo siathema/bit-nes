@@ -33,59 +33,59 @@ namespace BITNES
             case ZeroPage:
             {
                 u16 tableAddress = opcodeAddr[1] & 0x00FF;
-                result = read_memory(tableAddress, cpu->nes);
+                result = read_memory(tableAddress, cpu->console);
             }break;
 
             case ZeroPageX:
             {
                 u16 address = (opcodeAddr[1] + cpu->XReg) & 0x00FF;
-                result = read_memory(address, cpu->nes);
+                result = read_memory(address, cpu->console);
             }break;
 
             case ZeroPageY:
             {
                 u16 address = (opcodeAddr[1] + cpu->YReg) & 0x00FF;
-                result = read_memory(address, cpu->nes);
+                result = read_memory(address, cpu->console);
             }break;
 
             case Absolute:
             {
                 u16 address = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
-                result = read_memory(address, cpu->nes);
+                result = read_memory(address, cpu->console);
             }break;
 
             case AbsoluteX:
             {
                 u16 address = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
                 address += cpu->XReg;
-                result = read_memory(address, cpu->nes);
+                result = read_memory(address, cpu->console);
             }break;
 
             case AbsoluteY:
             {
                 u16 address = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
                 address += cpu->YReg;
-                result = read_memory(address, cpu->nes);
+                result = read_memory(address, cpu->console);
             }break;
 
             case IndexedIndirect:
             {
                 u16 tableAddress = (u8)opcodeAddr[1] + (u8)cpu->XReg;
                 tableAddress &= 0x00FF;
-                u16 address = read_memory(tableAddress, cpu->nes);
+                u16 address = read_memory(tableAddress, cpu->console);
                 tableAddress = (tableAddress+1) & 0x00FF;
-                address |= read_memory(tableAddress, cpu->nes) << 8;
-                result = read_memory(address, cpu->nes);
+                address |= read_memory(tableAddress, cpu->console) << 8;
+                result = read_memory(address, cpu->console);
             }break;
 
             case IndirectIndexed:
             {
                 u16 tableAddress = opcodeAddr[1] & 0x00FF;
-                u16 address = read_memory(tableAddress, cpu->nes);
+                u16 address = read_memory(tableAddress, cpu->console);
                 tableAddress = (tableAddress+1) & 0x00FF;
-                address |= read_memory(tableAddress, cpu->nes) << 8;
+                address |= read_memory(tableAddress, cpu->console) << 8;
                 address += cpu->YReg;
-                result = read_memory(address, cpu->nes);
+                result = read_memory(address, cpu->console);
             }break;
 
             default:
@@ -119,59 +119,59 @@ namespace BITNES
             case ZeroPage:
             {
                 u16 tableAddress = opcodeAddr[1] & 0x00FF;
-                write_memory(tableAddress, byte, cpu->nes);
+                write_memory(tableAddress, byte, cpu->console);
             }break;
 
             case ZeroPageX:
             {
                 u16 address = (opcodeAddr[1] + cpu->XReg) & 0x00FF;
-                write_memory(address, byte, cpu->nes);
+                write_memory(address, byte, cpu->console);
             }break;
 
             case ZeroPageY:
             {
                 u16 address = (opcodeAddr[1] + cpu->YReg) & 0x00FF;
-                write_memory(address, byte, cpu->nes);
+                write_memory(address, byte, cpu->console);
             }break;
 
             case Absolute:
             {
                 u16 address = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
-                write_memory(address, byte, cpu->nes);
+                write_memory(address, byte, cpu->console);
             }break;
 
             case AbsoluteX:
             {
                 u16 address = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
                 address += cpu->XReg;
-                write_memory(address, byte, cpu->nes);
+                write_memory(address, byte, cpu->console);
             }break;
 
             case AbsoluteY:
             {
                 u16 address = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
                 address += cpu->YReg;
-                write_memory(address, byte, cpu->nes);
+                write_memory(address, byte, cpu->console);
             }break;
 
             case IndexedIndirect:
             {
                 u16 tableAddress = (u8)opcodeAddr[1] + (u8)cpu->XReg;
                 tableAddress &= 0x00FF;
-                u16 address = read_memory(tableAddress, cpu->nes);
+                u16 address = read_memory(tableAddress, cpu->console);
                 tableAddress = (tableAddress+1) & 0x00FF;
-                address |= read_memory(tableAddress, cpu->nes) << 8;
-                write_memory(address, byte, cpu->nes);
+                address |= read_memory(tableAddress, cpu->console) << 8;
+                write_memory(address, byte, cpu->console);
             }break;
 
             case IndirectIndexed:
             {
                 u16 tableAddress = opcodeAddr[1] & 0x00FF;
-                u16 address = read_memory(tableAddress, cpu->nes);
+                u16 address = read_memory(tableAddress, cpu->console);
                 tableAddress = (tableAddress+1) & 0x00FF;
-                address |= read_memory(tableAddress, cpu->nes) << 8;
+                address |= read_memory(tableAddress, cpu->console) << 8;
                 address += cpu->YReg;
-                write_memory(address, byte, cpu->nes);
+                write_memory(address, byte, cpu->console);
             }break;
 
             default:
@@ -450,11 +450,11 @@ namespace BITNES
             case Indirect:
             {
                 u16 addrAddr = Absolute_Address(opcodeAddr[1], opcodeAddr[2]);
-                u16 jmpAddr = read_memory(addrAddr, cpu->nes) & 0x00FF;
+                u16 jmpAddr = read_memory(addrAddr, cpu->console) & 0x00FF;
                 u16 upperAddrAddr = addrAddr & 0xFF00;
                 addrAddr = (addrAddr+1) & 0x00FF;
                 addrAddr |= upperAddrAddr;
-                jmpAddr |= read_memory(addrAddr, cpu->nes)<<8;
+                jmpAddr |= read_memory(addrAddr, cpu->console)<<8;
                 cpu->PCReg = jmpAddr;
             }break;
             default:

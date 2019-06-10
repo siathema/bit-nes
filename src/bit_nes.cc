@@ -14,7 +14,7 @@ namespace BITNES {
 
 		NES->mapper = mapper;
 		NES->cpu = init_cpu(NES->memory);
-		NES->cpu->nes = NES;
+		NES->cpu->console = NES;
 		NES->ppu = init_ppu(NES->memory);
 		return NES;
 	}

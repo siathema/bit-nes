@@ -142,8 +142,8 @@ namespace BITNES
 		glBindVertexArray(0);
 
 
-		char* vertSrc = Get_Source_From_File("./assets/bitnes.vs");
-		char* fragSrc = Get_Source_From_File("./assets/bitnes.fs");
+		char* vertSrc = Get_Source_From_File("./assets/bitnesVertex.glsl");
+		char* fragSrc = Get_Source_From_File("./assets/bitnesFragment.glsl");
 		result.ShaderID = Create_Shader_Program(vertSrc, fragSrc);
 
 		return result;
@@ -335,7 +335,7 @@ namespace BITNES
 			PRGROMIndex += 512;
 		}
 
-        CHRROMIndex = PRGROMIndex;
+        	CHRROMIndex = PRGROMIndex;
 		CHRROMIndex += k16PRGPages * KILOBYTE(16);
 
 		u8* PatternTables = (u8*)malloc(sizeof(u8)*(k8CHRPages*KILOBYTE(8)));

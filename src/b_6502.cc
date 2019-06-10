@@ -62,7 +62,7 @@ void run_opcode(u8 *opcodeAddress, b6502 *cpu) {
   u8 opcode = *opcodeAddress;
 #if DEBUG_PRINT
   char message[400];
-  Instruction_Debug_Messege(cpu->nes, opcodeAddress);
+  Instruction_Debug_Messege(cpu->console, opcodeAddress);
   sprintf(message,"A:%02X X:%02X Y:%02X P:%02X SP:%02X CYC:%d\n",  cpu->AReg, cpu->XReg, cpu->YReg, status_flags(cpu), cpu->SPReg, cpu->cycles);
   Log(message);
 #endif
@@ -79,13 +79,13 @@ void run_opcode(u8 *opcodeAddress, b6502 *cpu) {
 
 u8 pop_stack(b6502 *cpu) {
   u16 stackPointer = 0x0100 | ++cpu->SPReg;
-  return read_memory(stackPointer, cpu->nes);
+  return read_memory(stackPointer, cpu->console);
 }
 
 void push_stack(b6502 *cpu, u8 data) {
   u16 stackPointer = 0x0100 | cpu->SPReg;
   //cpu->memory[stackPointer] = data;
-  write_memory(stackPointer, data, cpu->nes);
+  write_memory(stackPointer, data, cpu->console);
   cpu->SPReg--;
 }
 

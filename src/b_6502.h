@@ -18,7 +18,7 @@ namespace BITNES
     u16 PCReg;
     u8 *memory;
     u32 cycles;
-    nes *nes;
+    nes *console;
   };
 
   b6502* init_cpu(u8 *memory);
