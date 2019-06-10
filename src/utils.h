@@ -2,7 +2,7 @@
 #define _UTILS_H_
 
 #include "bit_nes.h"
-#include "b_Ops.h"
+#include "ops.h"
 
 #define KILOBYTE(size) (i64)(size * 1024)
 

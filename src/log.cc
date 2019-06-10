@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "b_log.h"
+#include "log.h"
 
 namespace BITNES
 {

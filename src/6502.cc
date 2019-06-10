@@ -1,10 +1,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "b_6502.h"
-#include "b_Ops.h"
-#include "b_log.h"
-#include "b_utils.h"
+#include "6502.h"
+#include "ops.h"
+#include "log.h"
+#include "utils.h"
 #include "bit_nes.h"
 
 namespace BITNES

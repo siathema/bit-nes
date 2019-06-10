@@ -10,10 +10,10 @@
 #include <SDL2/SDL.h>
 #endif
 #include "bit_nes.h"
-#include "b_6502.h"
-#include "b_ppu.h"
-#include "b_log.h"
-#include "b_utils.h"
+#include "6502.h"
+#include "ppu.h"
+#include "log.h"
+#include "utils.h"
 
 namespace BITNES
 {

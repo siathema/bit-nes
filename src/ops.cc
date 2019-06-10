@@ -1,5 +1,5 @@
-#include "b_Ops.h"
-#include "b_log.h"
+#include "ops.h"
+#include "log.h"
 #include "stdio.h"
 #include "stdlib.h"
 
@@ -263,7 +263,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_SBC) //NOTE(matthias): SBC - Indirect,X  mode - Subtract with Carry
+    OP(_SBC) //NOTE(matthias): SBC - Subtract with Carry
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -278,7 +278,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_ASL)
+    OP(_ASL) //NOTE(matthias): ASL - Arithmetic Shift Left
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -292,7 +292,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_ROL)
+    OP(_ROL) //NOTE(matthias): ROL - Rotate Left
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -308,7 +308,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_LSR)
+    OP(_LSR) //NOTE(matthias): LSR - Logical Shift Right
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -322,7 +322,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_ROR)
+    OP(_ROR) //NOTE(matthias): ROR - Rotate right
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -360,7 +360,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_DEC)
+    OP(_DEC) //NOTE(matthias): DEC - Decrement
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -374,7 +374,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_INC)
+    OP(_INC) //NOTE(matthias): INC - Increment
     {
         u8 dataRead = Get_Data(opcodeAddr, cpu, instruction);
 
@@ -439,7 +439,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_JMP)
+    OP(_JMP) //NOTE(matthias): JMP - Jump to Address
     {
         switch(instruction.Mode)
         {
@@ -539,7 +539,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_RTI)
+    OP(_RTI) //NOTE(matthias): RTI - Return from Interrupt
     {
         u8 flags = pop_stack(cpu);
         set_status(flags, cpu);
@@ -569,8 +569,9 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_CLI)
+    OP(_CLI) //NOTE(matthias): CLI - Clear Interrupt Disable
     {
+	//(TODO)matthias: Implement me
         cpu->Reset = true;
         char message[64];
         sprintf(message,"%02X %s: Undefined opcode, halting\n", opcodeAddr[0], opcode_to_mnemonic(opcodeAddr[0]));
@@ -623,7 +624,7 @@ namespace BITNES
         cpu->cycles += instruction.Cycles;
     }
 
-    OP(_TXA)
+    OP(_TXA) //NOTE(matthias): TXA - Transfer X to Accumulator
     {
         cpu->AReg = cpu->XReg;
         ZERO(cpu->AReg);

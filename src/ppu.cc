@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "b_ppu.h"
-#include "b_utils.h"
+#include "ppu.h"
+#include "utils.h"
 
 namespace BITNES
 {

@@ -1,7 +1,7 @@
-#ifndef _B_OPS_H
-#define _B_OPS_H
+#ifndef _OPS_H
+#define _OPS_H
 
-#include "b_6502.h"
+#include "6502.h"
 
 namespace BITNES
 {

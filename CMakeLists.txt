@@ -19,13 +19,13 @@ else() #MSVC
 endif()
 
 set(SOURCES
-	src/b_main.cc
-	src/b_6502.cc
-	src/b_ppu.cc
-	src/b_utils.cc
-	src/b_log.cc
+	src/main.cc
+	src/6502.cc
+	src/ppu.cc
+	src/utils.cc
+	src/log.cc
 	src/bit_nes.cc
-	src/b_Ops.cc)
+	src/ops.cc)
 
   add_executable(bit-nes ${SOURCES})
 

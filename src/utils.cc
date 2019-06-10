@@ -1,7 +1,7 @@
 #include "bit_nes.h"
-#include "b_6502.h"
-#include "b_utils.h"
-#include "b_log.h"
+#include "6502.h"
+#include "utils.h"
+#include "log.h"
 #include <stdio.h>
 
 namespace BITNES

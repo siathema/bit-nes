@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "b_6502.h"
-#include "b_ppu.h"
+#include "6502.h"
+#include "ppu.h"
 
 namespace BITNES {
 
