@@ -22,8 +22,8 @@ typedef int64_t i64;
 typedef float r32;
 typedef double r64;
 
- struct b6502;
- struct bppu;
+struct b6502;
+struct bppu;
 
 #define Internal static
 
@@ -45,11 +45,21 @@ enum MapperType {
 	COUNT
 };
 
+struct cartridge {
+	MapperType mapper;
+	u8* patternTableL;
+	u8* patternTableR;
+	u8* nameTable0;
+	u8* nameTable1;
+	u8* nameTable2;
+	u8* nameTable3;
+};
+
 struct nes {
 	b6502* cpu;
 	bppu* ppu;
 	u8* memory;
-	MapperType mapper;
+	cartridge cart;
 };
 
 nes* init_nes(u8* rom,  MapperType mapper);

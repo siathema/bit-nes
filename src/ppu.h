@@ -9,6 +9,15 @@
 #define PPU_NAME_TABLE2_ADDRESS 0x2800
 #define PPU_NAME_TABLE3_ADDRESS 0x2C00
   
+struct vram {
+	u8* patternTableL;
+	u8* patternTableR;
+	u8* nameTable0;
+	u8* nameTable1;
+	u8* nameTable2;
+	u8* nameTable3;
+};
+
 struct bppu {
 	u8* PPUCTRLreg;
 	u8* PPUMASKreg;
@@ -23,15 +32,6 @@ struct bppu {
 	vram* VRAM;
 };
 
-struct vram {
-	u8* patternTableL;
-	u8* patternTableR;
-	u8  nameTable0[1024];
-	u8  nameTable1[1024];
-	u8* nameTable2;
-	u8* nameTabel3;
-}
-
-bppu* init_ppu(u8* memory);
+bppu* init_ppu(u8* memory, cartridge* cart);
 void run_ppu(bppu* ppu);
 #endif

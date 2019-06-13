@@ -12,10 +12,10 @@ init_nes(u8* rom, MapperType mapper)
 	nes* NES = (nes*)calloc(1, sizeof(nes));
 	NES->memory = init_memory(rom, mapper);
 
-	NES->mapper = mapper;
+	NES->cart.mapper = mapper;
 	NES->cpu = init_cpu(NES->memory);
 	NES->cpu->console = NES;
-	NES->ppu = init_ppu(NES->memory);
+	NES->ppu = init_ppu(NES->memory, &NES->cart);
 	return NES;
 }
 
@@ -45,7 +45,7 @@ u8
 read_memory(u16 address, nes* nes)
 {
 	assert(address <= 0xFFFF);
-	switch (nes->mapper) {
+	switch (nes->cart.mapper) {
 	case M000_16K:
 		if (address >= 0xc000) //NOTE(matthias): memory is mirrored here
 			return nes->memory[address - KILOBYTE(16)];
@@ -88,7 +88,7 @@ write_memory(u16 address, u8 value, nes* nes)
 			nes->memory[address + MEM_MAP_RAM_MIRROR_0] = value;
 		}
 	}
-	switch (nes->mapper) {
+	switch (nes->cart.mapper) {
 	case M000_16K:
 		if (address >= 0xc000) { //NOTE(matthias): memory is mirrored here
 			nes->memory[address - KILOBYTE(16)] = value;
