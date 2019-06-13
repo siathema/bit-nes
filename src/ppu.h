@@ -20,8 +20,17 @@ struct bppu {
 	u8* PPUDATAreg;
 	u8* OAMDMA;
 	u8* Memory;
-	u8* VRAM;
+	vram* VRAM;
 };
+
+struct vram {
+	u8* patternTableL;
+	u8* patternTableR;
+	u8  nameTable0[1024];
+	u8  nameTable1[1024];
+	u8* nameTable2;
+	u8* nameTabel3;
+}
 
 bppu* init_ppu(u8* memory);
 void run_ppu(bppu* ppu);

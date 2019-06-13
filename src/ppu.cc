@@ -19,10 +19,11 @@ init_ppu(u8* memory) {
 	ppu->OAMDMA = memory + 0x4014;
 	ppu->Memory = memory;
 
+
 	return ppu;
 }
 
-void 
+	void 
 run_ppu(bppu* ppu)
 {
 	*ppu->PPUSTATUSreg = 0xff;
