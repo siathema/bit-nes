@@ -1,10 +1,8 @@
-#include "ops.h"
-#include "log.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "log.h"
+#include "ops.h"
 
-namespace BITNES
-{
 #define ZERO(value) (cpu->Zero = (value) == 0)
 #define NEGATIVE(value) (cpu->Negative = (((value) & 0x80) != 0))
 
@@ -1065,4 +1063,3 @@ namespace BITNES
         {Mnemonic_Count, Invalid, 0, 0},
 
     };
-}

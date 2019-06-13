@@ -7,8 +7,6 @@
 #include "utils.h"
 #include "bit_nes.h"
 
-namespace BITNES
-{
 
   b6502* init_cpu(u8 *memory) {
     b6502* cpu = (b6502*)calloc(1,sizeof(b6502));
@@ -87,6 +85,4 @@ void push_stack(b6502 *cpu, u8 data) {
   //cpu->memory[stackPointer] = data;
   write_memory(stackPointer, data, cpu->console);
   cpu->SPReg--;
-}
-
 }

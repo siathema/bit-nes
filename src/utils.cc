@@ -1,11 +1,9 @@
+#include <stdio.h>
 #include "bit_nes.h"
 #include "6502.h"
 #include "utils.h"
 #include "log.h"
-#include <stdio.h>
 
-namespace BITNES
-{
   void Instruction_Debug_Messege(nes* nes, u8* instruction)
   {
     char message[64] = {};
@@ -207,6 +205,4 @@ namespace BITNES
 const char* opcode_to_mnemonic(u8 opcode) {
   const char* mnemonic = Mnemonics[Instructions[opcode].Name];
   return mnemonic;
-}
-
 }

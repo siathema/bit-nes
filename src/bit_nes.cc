@@ -1,12 +1,10 @@
-#include "bit_nes.h"
-
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "6502.h"
 #include "ppu.h"
 
-namespace BITNES {
+#include "bit_nes.h"
 
 	nes* init_nes(u8* rom, MapperType mapper) {
 		nes* NES = (nes*)calloc(1, sizeof(nes));
@@ -125,4 +123,3 @@ namespace BITNES {
 
 		return result;
 	}
-}

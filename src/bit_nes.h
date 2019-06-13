@@ -1,8 +1,8 @@
 #ifndef BIT_NES_H_
 #define BIT_NES_H_
 
-#include <stdint.h>
 #include <assert.h>
+#include <stdint.h>
 
 #define PAGE_SIZE 256
 #define ROM_START 0x8000
@@ -21,10 +21,6 @@ typedef int64_t i64;
 
 typedef float r32;
 typedef double r64;
-
-
-namespace BITNES
-{
 
  struct b6502;
  struct bppu;
@@ -61,5 +57,4 @@ struct nes {
  u8 read_memory(u16 address, nes* nes);
  void write_memory(u16 address, u8 value, nes* nes);
  bool run_nes(nes* nes);
-}
 #endif
