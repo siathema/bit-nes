@@ -16,9 +16,11 @@
 #include "log.h"
 #include "utils.h"
 
-#define SCALE 4
-#define SCREEN_WIDTH 16 * 8
-#define SCREEN_HEIGHT 16 * 8 //240
+#define SCALE 2
+#define SCREEN_WIDTH  32 * 8 //240
+#define SCREEN_HEIGHT 30 * 8 //256
+#define PATTERN_TABLE_WIDTH 16 * 8
+#define PATTERN_TABLE_HEIGHT 16 * 8
 #define SCREEN_WIDTH_SCALED (SCREEN_WIDTH * SCALE)
 #define SCREEN_HEIGHT_SCALED (SCREEN_WIDTH * SCALE)
 
@@ -58,7 +60,7 @@ Get_Source_From_File(const char* path)
 i32
 Compile_Vertex_Shader(char* source)
 {
-    u32 vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	u32 vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
 	// attach shader source and compile
 	glShaderSource(vertexShader, 1, &source, 0);
@@ -207,7 +209,7 @@ Init_Window(SDL_GLContext* context) {
 }
 
 Internal void
-Make_PatternTable_Texture(u8* PatternTables, u8* pixels)
+image_make_pattern_table(u8* PatternTables, u8* pixels)
 {
 	u8* source = PatternTables;
 	u8* dest = pixels;
@@ -223,7 +225,7 @@ Make_PatternTable_Texture(u8* PatternTables, u8* pixels)
 			tileCountCol++;
 			//printf("Drawing Tile: Col: %d Row: %d\n", tableCol, tableRow);
 			for(i32 tileRow=0; tileRow<8; tileRow++) {
-                    		assert(dest <= (pixels+(SCREEN_WIDTH*SCREEN_HEIGHT*4)));
+                    		assert(dest <= (pixels+(PATTERN_TABLE_WIDTH * PATTERN_TABLE_HEIGHT *4)));
 				u8* plane0 = source;
 				u8* plane1 = source + 8;
 				//if(tableRow==16 && tableCol==16)
@@ -247,6 +249,56 @@ Make_PatternTable_Texture(u8* PatternTables, u8* pixels)
 		}
 	}
 	//printf("TileCount: Row%d Col:%d\n", tileCountRow, tileCountCol);
+}
+
+struct image{
+	u8* pixels;
+	u32 width;
+	u32 height;
+};
+
+Internal image
+image_init(u32 width, u32 height)
+{
+	image result;
+	result.width = width;
+	result.height = height;
+	result.pixels = (u8*)malloc(sizeof(u32) * width * height);
+
+	return result;
+}
+
+Internal void
+image_destroy(image* i)
+{
+	free(i->pixels);
+	i->width = i->height = 0;
+	i->pixels = 0;
+}
+
+Internal void
+image_blit(image* source, image* dest, i32 xoff, i32 yoff)
+{
+#if 0
+	if(xoff >= dest->width || xoff <= -(source->width) ||
+			yoff >= dest->height || yoff <= -(source->height)) {
+		return;
+	}
+#endif
+	i32 currentx, currenty, sourcex, sourcey;
+	u32* dpixels = (u32*)dest->pixels;
+	u32* spixels = (u32*)source->pixels;
+	if(xoff >= 0 && yoff >= 0) {
+		for( currenty = yoff, sourcey = 0; currenty < dest->height; currenty++, sourcey++ ) {
+			if(sourcey >= source->height)
+				return;
+			for( currentx = xoff, sourcex = 0; currentx < dest->width; currentx++, sourcex++) {
+				if(sourcex >= source->width)
+					break;
+				dpixels[(currenty * dest->width) + currentx] = spixels[(sourcey * source->width) + sourcex];
+			}
+		}
+	}
 }
 
 Internal int
@@ -318,15 +370,21 @@ proc(const char* args, const char* filePath)
 	u8* PatternTables = (u8*)malloc(sizeof(u8)*(k8CHRPages*KILOBYTE(8)));
 	memcpy(PatternTables, romBuffer + (CHRROMIndex), KILOBYTE(8));
 
-	u8* pixels = (u8*)malloc(sizeof(u8)*(SCREEN_HEIGHT*SCREEN_WIDTH)*4);
 
-	Make_PatternTable_Texture(PatternTables/*+0x1000*/, pixels);
+	image frame, pattern;
 
+	frame = image_init(SCREEN_WIDTH, SCREEN_HEIGHT);
+	pattern = image_init(PATTERN_TABLE_WIDTH, PATTERN_TABLE_HEIGHT);
+	
+	image_make_pattern_table(PatternTables/*+0x1000*/, pattern.pixels);
+	image_blit( &pattern, &frame, 0, 0);
+	image_make_pattern_table(PatternTables + 0x1000, pattern.pixels);
+	image_blit( &pattern, &frame, PATTERN_TABLE_WIDTH, 0);
 	SDL_Window* window = 0;
 	SDL_GLContext context;
 	window = Init_Window(&context);
 	GL_Data bitnesGLData = Gen_GL_Data();
-	bitnesGLData.TextureID = Gen_Texture(SCREEN_WIDTH ,SCREEN_HEIGHT, pixels);
+	bitnesGLData.TextureID = Gen_Texture(frame.width, frame.height, frame.pixels);
 
 
 	if(window == 0) {
@@ -403,6 +461,8 @@ proc(const char* args, const char* filePath)
 			}
 		}
 #endif
+		image_destroy(&frame);
+		image_destroy(&pattern);
 	}
 
 	if(testing) {
