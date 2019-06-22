@@ -24,6 +24,13 @@
 #define SCREEN_WIDTH_SCALED (SCREEN_WIDTH * SCALE)
 #define SCREEN_HEIGHT_SCALED (SCREEN_WIDTH * SCALE)
 
+const u8 NesPalette[64][3] = {
+	{84 ,84 ,84}, {0 ,30 , 116}, {8 , 16 , 144 }, {48, 0, 136}, {68, 0, 100}, {92, 0, 48}, {84, 4, 0}, {60, 24, 0}, {32, 42, 0}, {8, 58, 0}, {0, 64, 0}, {0, 60, 0}, {0, 50, 60}, {0, 0, 0}, {0, 0, 0,}, {0, 0, 0},
+	{152, 150, 152}, { 8, 76, 196}, {48, 50, 236}, {92, 30, 228}, {136, 20, 176}, {160, 20, 100}, {152, 34, 32}, {120, 60, 0}, {84, 90, 0}, {40, 114, 0}, {8, 124, 0}, {0, 118, 40}, {0, 102, 120}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0},
+	{236, 238, 236}, {76, 154, 236}, {120, 124, 236}, {176, 98, 236}, {228, 84, 236}, {236, 88, 180}, {236, 106, 100}, {212, 136, 32}, {160, 170, 0}, {116, 196, 0}, {76, 208, 32}, {56, 204, 108}, {56, 180, 204}, {60, 60, 60}, {0, 0, 0}, {0, 0, 0},
+	{236, 238, 236}, {168, 204, 236}, {188, 188, 236}, {212, 178, 236}, {236, 174, 236}, {236, 174, 212}, {236, 180, 176}, {228, 196, 144}, {204, 210, 120}, {180, 222, 120}, {168, 226, 144}, {152, 226, 180}, {160, 214, 228}, {160, 162, 160}, {0, 0, 0}, {0, 0, 0}
+};
+
 struct GL_Data
 {
 	u32 VBO;
@@ -209,7 +216,7 @@ Init_Window(SDL_GLContext* context) {
 }
 
 Internal void
-image_make_pattern_table(u8* PatternTables, u8* pixels)
+image_make_pattern_table(u8* PatternTables, u8* palette, u8* pixels)
 {
 	u8* source = PatternTables;
 	u8* dest = pixels;
@@ -217,6 +224,7 @@ image_make_pattern_table(u8* PatternTables, u8* pixels)
 	//i32 tableWidth = 16*2;
 	i32 tileCountCol = 0;
 	i32 tileCountRow = 0;
+	u8 background = 0x00000000;
 
 	for(i32 tableRow=0; tableRow<16; tableRow++) {
 		tileCountRow++;
@@ -232,13 +240,16 @@ image_make_pattern_table(u8* PatternTables, u8* pixels)
 					//printf("byte $%02X\n", (*plane0 | *plane1));
 				for(i32 tileCol=0; tileCol<8; tileCol++) {
 					u8 colorPlane0 = ((*plane0 >> (7-tileCol)) & 0x01);
-					u8 colorPlane1 = ((*plane1 >> (7-tileCol)) & 0x01);
-					colorPlane1 += colorPlane1 == 0 ? 0 : 1;
+					u8 colorPlane1 = ((*plane1 >> (7-tileCol)) & 0x01) << 1;
 					u8 color = colorPlane0 + colorPlane1;
-					dest[0] = color == 1 ? 255 : 50;
-					dest[1] = color == 2 ? 255 : 50;
-					dest[2] = color == 3 ? 255 : 50;
-					dest[3] = 0xff;
+					if(color == 0) {
+						for(int i=0; i<4; i++) dest[i] = background;
+					} else {
+						dest[0] = NesPalette[palette[color-1]][0];
+						dest[1] = NesPalette[palette[color-1]][1];
+						dest[2] = NesPalette[palette[color-1]][2];
+						dest[3] = 0xFF;  
+					}
 					dest += 4;
 				}
 				source++;
@@ -279,26 +290,38 @@ image_destroy(image* i)
 Internal void
 image_blit(image* source, image* dest, i32 xoff, i32 yoff)
 {
-#if 0
-	if(xoff >= dest->width || xoff <= -(source->width) ||
-			yoff >= dest->height || yoff <= -(source->height)) {
+	if(xoff >= (i32)dest->width || xoff <= -((i32)source->width) ||
+			yoff >= (i32)dest->height || yoff <= -((i32)source->height)) {
 		return;
 	}
-#endif
+
 	i32 currentx, currenty, sourcex, sourcey;
 	u32* dpixels = (u32*)dest->pixels;
 	u32* spixels = (u32*)source->pixels;
-	if(xoff >= 0 && yoff >= 0) {
-		for( currenty = yoff, sourcey = 0; currenty < dest->height; currenty++, sourcey++ ) {
-			if(sourcey >= source->height)
-				return;
-			for( currentx = xoff, sourcex = 0; currentx < dest->width; currentx++, sourcex++) {
-				if(sourcex >= source->width)
-					break;
-				dpixels[(currenty * dest->width) + currentx] = spixels[(sourcey * source->width) + sourcex];
-			}
+	if(yoff >= 0) {
+		currenty = yoff;
+		sourcey = 0;
+	} else {
+		currenty = 0;
+		sourcey = -yoff;
+	}
+	for( ; currenty < (i32)dest->height; currenty++, sourcey++ ) {
+		if(sourcey >= (i32)source->height)
+			return;
+		if(xoff >= 0) {
+			currentx = xoff;
+			sourcex = 0;
+		} else {
+			currentx = 0;
+			sourcex = -xoff;
+		}
+		for( ; currentx < (i32)dest->width; currentx++, sourcex++) {
+			if(sourcex >= (i32)source->width)
+				break;
+			dpixels[(currenty * dest->width) + currentx] = spixels[(sourcey * source->width) + sourcex];
 		}
 	}
+	
 }
 
 Internal int
@@ -375,11 +398,14 @@ proc(const char* args, const char* filePath)
 
 	frame = image_init(SCREEN_WIDTH, SCREEN_HEIGHT);
 	pattern = image_init(PATTERN_TABLE_WIDTH, PATTERN_TABLE_HEIGHT);
-	
-	image_make_pattern_table(PatternTables/*+0x1000*/, pattern.pixels);
+
+	u8 palette[3] = {0x16, 0x27, 0x18};
+
+	image_make_pattern_table(PatternTables/*+0x1000*/, palette, pattern.pixels);
 	image_blit( &pattern, &frame, 0, 0);
-	image_make_pattern_table(PatternTables + 0x1000, pattern.pixels);
+	image_make_pattern_table(PatternTables + 0x1000, palette, pattern.pixels);
 	image_blit( &pattern, &frame, PATTERN_TABLE_WIDTH, 0);
+
 	SDL_Window* window = 0;
 	SDL_GLContext context;
 	window = Init_Window(&context);
