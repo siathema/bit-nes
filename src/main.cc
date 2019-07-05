@@ -23,6 +23,7 @@
 #define PATTERN_TABLE_HEIGHT 16 * 8
 #define SCREEN_WIDTH_SCALED (SCREEN_WIDTH * SCALE)
 #define SCREEN_HEIGHT_SCALED (SCREEN_WIDTH * SCALE)
+#define TILE_WIDTH 8
 
 const u8 NesPalette[64][3] = {
 	{84 ,84 ,84}, {0 ,30 , 116}, {8 , 16 , 144 }, {48, 0, 136}, {68, 0, 100}, {92, 0, 48}, {84, 4, 0}, {60, 24, 0}, {32, 42, 0}, {8, 58, 0}, {0, 64, 0}, {0, 60, 0}, {0, 50, 60}, {0, 0, 0}, {0, 0, 0,}, {0, 0, 0},
@@ -270,50 +271,48 @@ Init_Window(SDL_GLContext* context) {
 }
 
 Internal void
+draw_patterntable_bit(u8* dest, u8 plane0, u8 plane1, u8* palette, u8* background, i32 bit)
+{
+	u8 color = ((plane0 >> (7-bit)) & 0x01) + (((plane1 >> (7-bit)) & 0x01) << 1);
+	for(u32 i = 0; i < 3; i++) {
+		if(color == 0)
+			*dest++ = background[i];
+		else
+			*dest++ = NesPalette[palette[color-1]][i];
+	}
+	*dest = 0xFF;
+}
+
+Internal void
 image_make_pattern_table(u8* PatternTables, u8* palette, u8* pixels)
 {
 	u8* source = PatternTables;
 	u8* dest = pixels;
 	i32 pixelWidth = 16*8*4;
-	//i32 tableWidth = 16*2;
 	i32 tileCountCol = 0;
 	i32 tileCountRow = 0;
-	u8 background = 0x00000000;
+	u8 background[3] = {};
 
 	for(i32 tableRow=0; tableRow<16; tableRow++) {
 		tileCountRow++;
 		for(i32 tableCol=0; tableCol<16; tableCol++) {
 			dest = pixels + ((tableRow*(pixelWidth*8))+(tableCol*(8*4)));
 			tileCountCol++;
-			//printf("Drawing Tile: Col: %d Row: %d\n", tableCol, tableRow);
-			for(i32 tileRow=0; tileRow<8; tileRow++) {
+			for(i32 tileRow=0; tileRow<TILE_WIDTH; tileRow++) {
                     		assert(dest <= (pixels+(PATTERN_TABLE_WIDTH * PATTERN_TABLE_HEIGHT *4)));
-				u8* plane0 = source;
-				u8* plane1 = source + 8;
-				//if(tableRow==16 && tableCol==16)
-					//printf("byte $%02X\n", (*plane0 | *plane1));
-				for(i32 tileCol=0; tileCol<8; tileCol++) {
-					u8 colorPlane0 = ((*plane0 >> (7-tileCol)) & 0x01);
-					u8 colorPlane1 = ((*plane1 >> (7-tileCol)) & 0x01) << 1;
-					u8 color = colorPlane0 + colorPlane1;
-					if(color == 0) {
-						for(int i=0; i<4; i++) dest[i] = background;
-					} else {
-						dest[0] = NesPalette[palette[color-1]][0];
-						dest[1] = NesPalette[palette[color-1]][1];
-						dest[2] = NesPalette[palette[color-1]][2];
-						dest[3] = 0xFF;  
-					}
+				u8 plane0 = *source;
+				u8 plane1 = *(source + TILE_WIDTH);
+				for(i32 tileCol=0; tileCol<TILE_WIDTH; tileCol++) {
+					draw_patterntable_bit(dest, plane0, plane1, palette, &background[0], tileCol);
 					dest += 4;
 				}
 				source++;
-				dest += (pixelWidth - (8*4));
+				dest += pixelWidth - (TILE_WIDTH * 4);
 			}
 
-                	source += 8;
+                	source += TILE_WIDTH;
 		}
 	}
-	//printf("TileCount: Row%d Col:%d\n", tileCountRow, tileCountCol);
 }
 
 struct image{
@@ -377,10 +376,9 @@ image_blit(image* source, image* dest, i32 xoff, i32 yoff)
 	}
 	
 }
-#define TILE_WIDTH 8
 
 Internal void
-render_pixe(u8* pixels)
+render_pixe(u8* pixels, u8* patternTable)
 {
 	u32 NameTableIndex = 0;	
 	u32 NameTableTileWidth = SCREEN_WIDTH / TILE_WIDTH;
@@ -389,7 +387,11 @@ render_pixe(u8* pixels)
 		NameTableIndex = (y / TILE_WIDTH) * NameTableTileWidth;
 		for(u32 x = 0; x < SCREEN_WIDTH; x++) {
 			if((x % TILE_WIDTH) == 0) NameTableIndex++;	
-
+			
+			for(u32 i = 0; i < 3; i++) {
+				//*pixels++ = color[i]
+			}
+			
 		}
 	}
 }
