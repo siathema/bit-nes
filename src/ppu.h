@@ -19,6 +19,16 @@ struct vram {
 };
 
 struct bppu {
+  bool evenFrame;
+  u32 ticks;
+  u32 scanline;
+  u16 vRamAddress;
+  u8  currentNameTableReg;
+  u8  currentAttribReg;
+  u8  nextTilePlane0;
+  u8  nextTilePlane1;
+  u16 tileShiftRegPlane0;
+  u16 tileShiftRegPlane1;
 	u8* PPUCTRLreg;
 	u8* PPUMASKreg;
 	u8* PPUSTATUSreg;

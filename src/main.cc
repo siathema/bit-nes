@@ -16,13 +16,13 @@
 #include "log.h"
 #include "utils.h"
 
-#define SCALE 4
+#define SCALE 2
 #define SCREEN_WIDTH  32 * 8 //240
 #define SCREEN_HEIGHT 30 * 8 //256
 #define PATTERN_TABLE_WIDTH 16 * 8
 #define PATTERN_TABLE_HEIGHT 16 * 8
-#define SCREEN_WIDTH_SCALED (SCREEN_WIDTH * SCALE)
-#define SCREEN_HEIGHT_SCALED (SCREEN_WIDTH * SCALE)
+#define SCREEN_WIDTH_SCALED ((SCREEN_WIDTH + PATTERN_TABLE_WIDTH) * SCALE)
+#define SCREEN_HEIGHT_SCALED ((SCREEN_HEIGHT + (SCREEN_HEIGHT - PATTERN_TABLE_HEIGHT * 2)) * SCALE)
 #define TILE_WIDTH 8
 
 const u8 NesPalette[64][3] = {
@@ -33,32 +33,32 @@ const u8 NesPalette[64][3] = {
 };
 
 const u8 DebugNameTable[960] = {
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 83, 84, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 85, 86, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
-	37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37, 37,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 83, 84, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 85, 86, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,
+	36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 
 	180, 181, 180, 181, 180, 181, 180, 181, 180, 181 ,180, 181 ,180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181,
 	182, 183, 182, 183, 182, 183, 182, 183, 182, 183 ,182, 183 ,182, 183, 182, 183, 182, 183, 182, 183, 182, 183, 182, 183, 182, 183, 182, 183, 182, 183, 182, 183,
 	180, 181, 180, 181, 180, 181, 180, 181, 180, 181 ,180, 181 ,180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181, 180, 181,
@@ -77,13 +77,13 @@ const u8 DebugAttribTable[64] = {
 };
 
 const u8 DebugPaletteData[25] = {
-	0x2c, // Universal background color cyan
+	0x22, // Universal background color cyan
 	0x27, // Start of background palette 0
-	0x18,
+	0x17,
 	0x0d,
-	0x37, // Start of background palette 1
-	0x18,
-	0x0d
+	0x37,
+	0x17,
+	0x0d, // Start of background palette 1
 };
 
 struct GL_Data
@@ -276,7 +276,7 @@ draw_patterntable_bit(u8* dest, u8 plane0, u8 plane1, u8* palette, u8* backgroun
 	u8 color = ((plane0 >> (7-bit)) & 0x01) + (((plane1 >> (7-bit)) & 0x01) << 1);
 	for(u32 i = 0; i < 3; i++) {
 		if(color == 0)
-			*dest++ = background[i];
+			*dest++ = NesPalette[*background][i];
 		else
 			*dest++ = NesPalette[palette[color-1]][i];
 	}
@@ -291,7 +291,7 @@ image_make_pattern_table(u8* PatternTables, u8* palette, u8* pixels)
 	i32 pixelWidth = 16*8*4;
 	i32 tileCountCol = 0;
 	i32 tileCountRow = 0;
-	u8 background[3] = {};
+	u8 background = 0x0f;
 
 	for(i32 tableRow=0; tableRow<16; tableRow++) {
 		tileCountRow++;
@@ -303,7 +303,7 @@ image_make_pattern_table(u8* PatternTables, u8* palette, u8* pixels)
 				u8 plane0 = *source;
 				u8 plane1 = *(source + TILE_WIDTH);
 				for(i32 tileCol=0; tileCol<TILE_WIDTH; tileCol++) {
-					draw_patterntable_bit(dest, plane0, plane1, palette, &background[0], tileCol);
+					draw_patterntable_bit(dest, plane0, plane1, palette, &background, tileCol);
 					dest += 4;
 				}
 				source++;
@@ -378,20 +378,39 @@ image_blit(image* source, image* dest, i32 xoff, i32 yoff)
 }
 
 Internal void
-render_pixe(u8* pixels, u8* patternTable)
+render_pixels(u8* pixels, u8* patternTable)
 {
 	u32 NameTableIndex = 0;	
 	u32 NameTableTileWidth = SCREEN_WIDTH / TILE_WIDTH;
+	u32 attribTableIndex = 0;
+	u8* dest = pixels;
 
 	for(u32 y = 0; y < SCREEN_HEIGHT; y++) {
 		NameTableIndex = (y / TILE_WIDTH) * NameTableTileWidth;
 		for(u32 x = 0; x < SCREEN_WIDTH; x++) {
-			if((x % TILE_WIDTH) == 0) NameTableIndex++;	
-			
-			for(u32 i = 0; i < 3; i++) {
-				//*pixels++ = color[i]
+			if((x % TILE_WIDTH) == 0 && x != 0) NameTableIndex++;	
+			attribTableIndex = ((NameTableIndex % 32) / 4) + ((NameTableIndex / 128) * 8);
+			u8 attribData = DebugAttribTable[attribTableIndex]; 
+			u8 shift = 0;
+			if( NameTableIndex % 2 == 0 && NameTableIndex != 0) {
+				if( (NameTableIndex / 32) % 2 == 0) {
+					shift = 0;
+				} else {
+					shift = 4;
+				}
+			} else {
+				if( (NameTableIndex / 32) % 2 != 0) {
+					shift = 2;
+				} else {
+					shift = 6;
+				}
 			}
-			
+			u8 paletteIndex = ((attribData >> shift) & 0x03);
+			u8  plane0 = patternTable[(DebugNameTable[NameTableIndex] * 16) + (y % TILE_WIDTH)];
+			u8  plane1 = patternTable[((DebugNameTable[NameTableIndex] * 16) + (y % TILE_WIDTH))+ TILE_WIDTH];
+			u8* palette = (u8*)DebugPaletteData + 1 + (paletteIndex * 3);
+			draw_patterntable_bit(dest, plane0, plane1, palette, (u8*)&DebugPaletteData[0], (x % TILE_WIDTH));
+			dest += 4;
 		}
 	}
 }
@@ -466,18 +485,21 @@ proc(const char* args, const char* filePath)
 	memcpy(PatternTables, romBuffer + (CHRROMIndex), KILOBYTE(8));
 
 
-	image frame, pattern;
+	image frame, nesOutImg, pattern;
 
-	frame = image_init(SCREEN_WIDTH, SCREEN_HEIGHT);
+	frame = image_init(SCREEN_WIDTH + PATTERN_TABLE_WIDTH, SCREEN_HEIGHT + (SCREEN_HEIGHT - PATTERN_TABLE_WIDTH *2 ));
+  nesOutImg = image_init(SCREEN_WIDTH, SCREEN_HEIGHT);
 	pattern = image_init(PATTERN_TABLE_WIDTH, PATTERN_TABLE_HEIGHT);
 
 	u8 palette[3] = {0x16, 0x27, 0x18};
 
-	image_make_pattern_table(PatternTables/*+0x1000*/, palette, pattern.pixels);
-	image_blit( &pattern, &frame, 0, 0);
+	image_make_pattern_table(PatternTables, palette, pattern.pixels);
+	image_blit( &pattern, &frame, SCREEN_WIDTH, 0);
 	image_make_pattern_table(PatternTables + 0x1000, palette, pattern.pixels);
-	image_blit( &pattern, &frame, PATTERN_TABLE_WIDTH, 0);
+	image_blit( &pattern, &frame, SCREEN_WIDTH, PATTERN_TABLE_HEIGHT);
 
+	render_pixels(nesOutImg.pixels, PatternTables + 0x1000);
+  image_blit(&nesOutImg, &frame, 0, 0);
 	SDL_Window* window = 0;
 	SDL_GLContext context;
 	window = Init_Window(&context);
@@ -495,10 +517,11 @@ proc(const char* args, const char* filePath)
 
 	SDL_Event event;
 	//r64 targetTime = 0.000000000601;
+  u64 targetTime = 1000 / 60;
 	bool running = true;
 
 	while(running) {
-		//u64 startTime = clock();
+		u64 startTime = SDL_GetTicks();
 
 		running = run_nes(nes);
 
@@ -547,16 +570,15 @@ proc(const char* args, const char* filePath)
 			}break;
 			}
 		}
-#if 0
+#if 1 
 		//NOTE(matthias): Timing stuff
-		u64 endTime = clock();
+		u64 endTime = SDL_GetTicks();
 		u64 elapsedTime = endTime - startTime;
-		r64 elapsedTimed = elapsedTime / CLOCKS_PER_SEC;
 		if (elapsedTime < targetTime) {
-			while (1) {
-				elapsedTimed = (r64)(clock() - startTime)/ CLOCKS_PER_SEC;
-			   	if (elapsedTime >= targetTime) break;
-			}
+      u64 wait = targetTime - elapsedTime;
+      
+      SDL_Delay(wait);
+			  //if (elapsedTime >= targetTime) break;
 		}
 #endif
 		image_destroy(&frame);
