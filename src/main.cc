@@ -522,7 +522,7 @@ proc(const char* args, const char* filePath)
 	while(running) {
 		u64 startTime = SDL_GetTicks();
 
-		running = run_nes(nes);
+		//running = run_nes(nes);
 
 		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 		glClear(GL_COLOR_BUFFER_BIT);

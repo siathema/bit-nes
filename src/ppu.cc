@@ -78,43 +78,48 @@ void
 ppu_tick(bppu* ppu)
 {
 	u32 dot = ppu->ticks % 341;
-		// visible scanlines
-		if(ppu->scanline < 240) {
-			if(dot == 0) {
-				ppu->ticks++;
-				return;
-			}
-			// Load NT byte
-			if( (dot -2) % 8 == 0) {
-				ppu->currentNameTableReg = VRAM_read(ppu->VRAM, ppu->vRamAddress);
-			// Load AT byte
-			} else if ( dot >= 4 && (dot - 4) % 8 == 0) {
-				ppu->currentAttribReg = VRAM_read(ppu->VRAM, ppu->vRamAddress + 0x3c0);
-			} else if (dot >= 6 && (dot - 6) % 8 == 0) {
-				ppu->nextTilePlane0 = VRAM_read(ppu->VRAM, ppu->currentNameTableReg + PPU_PATTERN_TABLE1_ADDRESS);
-			} else if (dot >= 8 && (dot - 8) % 8 == 0) {
-				ppu->nextTilePlane1 = VRAM_read(ppu->VRAM, ppu->currentNameTableReg + 8 + PPU_PATTERN_TABLE1_ADDRESS);
-			}
-
-			if(dot == 340) {
-				ppu->scanline++;
-			}
-		// vblank scanlines
-		} else if( ppu->scanline >= 240 && ppu->scanline < 261) {
-			if(dot == 340) {
-				ppu->scanline++;
-			}
-		// dummy scanline
-		} else {
-			if(dot == 339 && !ppu->evenFrame) {
-				ppu->scanline = 0;
-				ppu->ticks = 0;
-				ppu->evenFrame = !ppu->evenFrame;
-			} else if(dot == 340) {
-				ppu->scanline = 0;
-				ppu->ticks = 0;
-				ppu->evenFrame = !ppu->evenFrame;
-			}
+	// visible scanlines
+	if(ppu->scanline < 240) {
+		if(dot == 0) {
+			ppu->ticks++;
 			return;
 		}
+		// Load NT byte
+		if( (dot -2) % 8 == 0) {
+			ppu->currentNameTableReg = VRAM_read(ppu->VRAM, ppu->vRamAddress);
+			ppu->vRamAddress++;
+			// Load AT byte
+		} else if ( dot >= 4 && (dot - 4) % 8 == 0) {
+			ppu->currentAttribReg = VRAM_read(ppu->VRAM, ppu->vRamAddress + 0x3c0);
+		} else if (dot >= 6 && (dot - 6) % 8 == 0) {
+			ppu->nextTilePlane0 = VRAM_read(ppu->VRAM, ppu->currentNameTableReg + PPU_PATTERN_TABLE1_ADDRESS);
+		} else if (dot >= 8 && (dot - 8) % 8 == 0) {
+			ppu->nextTilePlane1 = VRAM_read(ppu->VRAM, ppu->currentNameTableReg + 8 + PPU_PATTERN_TABLE1_ADDRESS);
+		}
+
+		if(dot == 340) {
+			ppu->scanline++;
+		}
+
+		//rendering output
+		
+		// vblank scanlines
+	} else if( ppu->scanline >= 240 && ppu->scanline < 261) {
+		if(dot == 340) {
+			ppu->scanline++;
+		}
+		// dummy scanline
+	} else {
+		if(dot == 339 && !ppu->evenFrame) {
+			ppu->scanline = 0;
+			ppu->ticks = 0;
+			ppu->evenFrame = !ppu->evenFrame;
+		} else if(dot == 340) {
+			ppu->scanline = 0;
+			ppu->ticks = 0;
+			ppu->evenFrame = !ppu->evenFrame;
+		}
+		return;
+	}
+
 }
