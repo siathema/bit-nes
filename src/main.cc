@@ -516,8 +516,7 @@ proc(const char* args, const char* filePath)
 	nes* nes = init_nes(romBuffer + PRGROMIndex, mapper);
 
 	SDL_Event event;
-	//r64 targetTime = 0.000000000601;
-  u64 targetTime = 1000 / 60;
+  	u64 targetTime = 1000 / 60;
 	bool running = true;
 
 	while(running) {

@@ -48,10 +48,36 @@ init_ppu(u8* memory, cartridge* cart) {
 	return ppu;
 }
 
-	void 
+u8
+VRAM_read(vram* ram, u16 address) {
+	if(address >= PPU_PATTERN_TABLE0_ADDRESS && address < PPU_PATTERN_TABLE1_ADDRESS) {
+		return ram->patternTableL[address];
+	} else if( address < PPU_NAME_TABLE0_ADDRESS) {
+		return ram->patternTableR[address - PPU_PATTERN_TABLE1_ADDRESS];
+	} else if( address < PPU_NAME_TABLE1_ADDRESS) {
+		return ram->nameTable0[address - PPU_NAME_TABLE0_ADDRESS];
+	} else if( address < PPU_NAME_TABLE2_ADDRESS) {
+		return ram->nameTable1[address - PPU_NAME_TABLE1_ADDRESS];
+	} else if( address < PPU_NAME_TABLE3_ADDRESS) {
+		return ram->nameTable2[address - PPU_NAME_TABLE2_ADDRESS];
+	} else if( address < PPU_NAME_TABLE0_MIRROR) {
+		return ram->nameTable3[address - PPU_NAME_TABLE3_ADDRESS];
+	} else if( address < PPU_PALETTE_ADDRESS) {
+		return ram->nameTable0[address - PPU_NAME_TABLE0_MIRROR];
+	} else if( address < PPU_PALETTE_MIRROR) {
+		return ram->palette[address - PPU_PALETTE_ADDRESS];
+	} else if( address < PPU_VRAM_END ) {
+		return ram->palette[address - PPU_PALETTE_MIRROR];
+	} else {
+		printf("this shouldn't happen you tried reading ram at: $%X\n", address);
+	}
+	return 0;
+};
+
+void 
 ppu_tick(bppu* ppu)
 {
-	u32 dot = ppu->ticks % 341
+	u32 dot = ppu->ticks % 341;
 		// visible scanlines
 		if(ppu->scanline < 240) {
 			if(dot == 0) {
@@ -70,7 +96,7 @@ ppu_tick(bppu* ppu)
 				ppu->nextTilePlane1 = VRAM_read(ppu->VRAM, ppu->currentNameTableReg + 8 + PPU_PATTERN_TABLE1_ADDRESS);
 			}
 
-			if(ppu->dot == 340) {
+			if(dot == 340) {
 				ppu->scanline++;
 			}
 		// vblank scanlines
@@ -82,11 +108,11 @@ ppu_tick(bppu* ppu)
 		} else {
 			if(dot == 339 && !ppu->evenFrame) {
 				ppu->scanline = 0;
-				ppu->cycles = 0;
+				ppu->ticks = 0;
 				ppu->evenFrame = !ppu->evenFrame;
 			} else if(dot == 340) {
 				ppu->scanline = 0;
-				ppu->cycles = 0;
+				ppu->ticks = 0;
 				ppu->evenFrame = !ppu->evenFrame;
 			}
 			return;

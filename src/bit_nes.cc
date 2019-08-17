@@ -118,7 +118,7 @@ bool run_nes(nes* nes)
 	run_cpu(nes->cpu);
 
 	for(i32 cycle=0; cycle<ppuPerCpu; cycle++) {
-		run_ppu(nes->ppu);
+		ppu_tick(nes->ppu);
 	}
 
 	result = !nes->cpu->Reset;

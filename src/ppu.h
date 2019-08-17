@@ -8,6 +8,10 @@
 #define PPU_NAME_TABLE1_ADDRESS 0x2400
 #define PPU_NAME_TABLE2_ADDRESS 0x2800
 #define PPU_NAME_TABLE3_ADDRESS 0x2C00
+#define PPU_NAME_TABLE0_MIRROR 0x3000
+#define PPU_PALETTE_ADDRESS 0x3F00
+#define PPU_PALETTE_MIRROR 0x3F20
+#define PPU_VRAM_END 0x4000
   
 struct vram {
 	u8* patternTableL;
@@ -16,6 +20,7 @@ struct vram {
 	u8* nameTable1;
 	u8* nameTable2;
 	u8* nameTable3;
+	u8* palette;
 };
 
 struct bppu {
@@ -43,5 +48,5 @@ struct bppu {
 };
 
 bppu* init_ppu(u8* memory, cartridge* cart);
-void run_ppu(bppu* ppu);
+void ppu_tick(bppu* ppu);
 #endif
