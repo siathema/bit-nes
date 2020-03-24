@@ -1,5 +1,5 @@
 # bit-nes
-A NES emulator written in orthodox C++
+A NES emulator written in C++
 
 # TODO
 - Draw Patterntables.
