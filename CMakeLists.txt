@@ -25,7 +25,8 @@ set(SOURCES
 	src/utils.cc
 	src/log.cc
 	src/bit_nes.cc
-	src/ops.cc)
+	src/ops.cc
+	src/renderer.cc)
 
   add_executable(bit-nes ${SOURCES})
 
